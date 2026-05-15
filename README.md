@@ -1,32 +1,32 @@
 # 💊 Mi Drugstore — Backend API
 
-REST API para una farmacia online. Construida con **Express 5**, **TypeScript**, **Prisma ORM** y autenticación **JWT**.
+REST API for an online pharmacy. Built with **Express 5**, **TypeScript**, **Prisma ORM**, and **JWT** authentication.
 
-## 🛠️ Stack
+## 🛠️ Tech Stack
 
-| Tecnología | Uso |
-|------------|-----|
-| Node.js + TypeScript | Runtime y tipado estático |
-| Express 5 | Framework HTTP |
-| Prisma ORM | Acceso a base de datos |
-| SQLite (libsql) | Base de datos local / [Turso](https://turso.tech) en producción |
-| bcryptjs | Hash de contraseñas |
-| JSON Web Tokens | Autenticación stateless |
-| ts-node-dev | Hot reload en desarrollo |
+| Technology | Purpose |
+|------------|---------|
+| Node.js + TypeScript | Runtime and static typing |
+| Express 5 | HTTP framework |
+| Prisma ORM | Database access layer |
+| SQLite (libsql) | Local database / [Turso](https://turso.tech) in production |
+| bcryptjs | Password hashing |
+| JSON Web Tokens | Stateless authentication |
+| ts-node-dev | Hot reload for development |
 
-## 📁 Estructura del proyecto
+## 📁 Project Structure
 
 ```
 src/
 ├── config/
-│   └── db.ts              # Cliente de Prisma
+│   └── db.ts              # Prisma client instance
 ├── controllers/
 │   ├── auth.controller.ts
 │   ├── category.controller.ts
 │   ├── order.controller.ts
 │   └── product.controller.ts
 ├── middlewares/
-│   └── authMiddleware.ts  # Verificación JWT
+│   └── authMiddleware.ts  # JWT verification
 ├── routes/
 │   ├── auth.routes.ts
 │   ├── category.routes.ts
@@ -45,70 +45,70 @@ prisma/
 └── seed.ts
 ```
 
-## ⚙️ Variables de entorno
+## ⚙️ Environment Variables
 
-Crear un archivo `.env` en la raíz del proyecto:
+Create a `.env` file in the project root:
 
 ```env
 DATABASE_URL="file:./dev.db"
-JWT_SECRET="tu_clave_secreta_aqui"
+JWT_SECRET="your_secret_key_here"
 PORT=3000
 ```
 
-> Para producción con **Turso**, reemplazar `DATABASE_URL` por la URL del proyecto y agregar `TURSO_AUTH_TOKEN`.
+> For **Turso** in production, replace `DATABASE_URL` with your Turso database URL and add `TURSO_AUTH_TOKEN`.
 
-## 🚀 Instalación y uso
+## 🚀 Getting Started
 
 ```bash
-# 1. Instalar dependencias (genera el cliente de Prisma automáticamente)
+# 1. Install dependencies (auto-generates Prisma client)
 npm install
 
-# 2. Aplicar el schema a la base de datos
+# 2. Push the schema to the database
 npx prisma db push
 
-# 3. (Opcional) Cargar datos de prueba
+# 3. (Optional) Seed the database with sample data
 npx prisma db seed
 
-# 4. Iniciar en modo desarrollo
+# 4. Start in development mode
 npm run dev
 ```
 
-El servidor levanta en `http://localhost:3000`.
+The server runs at `http://localhost:3000`.
 
-## 📋 Endpoints
+## 📋 API Endpoints
 
 ### Auth — `/api/auth`
 
-| Método | Ruta | Descripción | Auth |
-|--------|------|-------------|------|
-| POST | `/register` | Registrar nuevo usuario | ❌ |
-| POST | `/login` | Iniciar sesión, retorna JWT | ❌ |
+| Method | Route | Description | Auth |
+|--------|-------|-------------|------|
+| POST | `/register` | Register a new user | ❌ |
+| POST | `/login` | Log in and receive a JWT | ❌ |
 
-### Productos — `/api/products`
+### Products — `/api/products`
 
-| Método | Ruta | Descripción | Auth |
-|--------|------|-------------|------|
-| GET | `/` | Listar todos los productos | ❌ |
-| GET | `/:id` | Obtener un producto | ❌ |
-| POST | `/` | Crear producto | ✅ |
-| PUT | `/:id` | Actualizar producto | ✅ |
-| DELETE | `/:id` | Eliminar producto | ✅ |
+| Method | Route | Description | Auth |
+|--------|-------|-------------|------|
+| GET | `/` | List all products | ❌ |
+| GET | `/:id` | Get a single product | ❌ |
+| POST | `/` | Create a product | ✅ |
+| PUT | `/:id` | Update a product | ✅ |
+| DELETE | `/:id` | Delete a product | ✅ |
 
-### Categorías — `/api/categories`
+### Categories — `/api/categories`
 
-| Método | Ruta | Descripción | Auth |
-|--------|------|-------------|------|
-| GET | `/` | Listar categorías | ❌ |
-| POST | `/` | Crear categoría | ✅ |
-| PUT | `/:id` | Actualizar categoría | ✅ |
-| DELETE | `/:id` | Eliminar categoría | ✅ |
+| Method | Route | Description | Auth |
+|--------|-------|-------------|------|
+| GET | `/` | List all categories | ❌ |
+| POST | `/` | Create a category | ✅ |
+| PUT | `/:id` | Update a category | ✅ |
+| DELETE | `/:id` | Delete a category | ✅ |
 
-### Órdenes — `/api/orders`
+### Orders — `/api/orders`
 
-| Método | Ruta | Descripción | Auth |
-|--------|------|-------------|------|
-| POST | `/` | Crear una orden | ✅ |
-| GET | `/my-orders` | Ver mis órdenes | ✅ |
+| Method | Route | Description | Auth |
+|--------|-------|-------------|------|
+| POST | `/` | Place a new order | ✅ |
+| GET | `/my-orders` | Get current user's orders | ✅ |
 
 ### Health Check
 
@@ -116,17 +116,17 @@ El servidor levanta en `http://localhost:3000`.
 GET /health → { "status": "OK" }
 ```
 
-## 🔐 Autenticación
+## 🔐 Authentication
 
-Las rutas protegidas requieren el header:
+Protected routes require the following header:
 
 ```
 Authorization: Bearer <token>
 ```
 
-El token se obtiene al hacer login o registro.
+The token is returned on login or registration.
 
-## 🗃️ Modelos de datos
+## 🗃️ Data Models
 
 ```prisma
 User       → id, name, email, password
@@ -136,14 +136,14 @@ Order      → id, total, createdAt, userId
 OrderItem  → id, quantity, price, orderId, productId
 ```
 
-## 📜 Scripts disponibles
+## 📜 Available Scripts
 
-| Comando | Descripción |
+| Command | Description |
 |---------|-------------|
-| `npm run dev` | Desarrollo con hot reload |
-| `npm run build` | Compilar TypeScript a JS |
-| `npm start` | Producción (build + prisma db push) |
+| `npm run dev` | Start with hot reload |
+| `npm run build` | Compile TypeScript to JS |
+| `npm start` | Production (build + prisma db push) |
 
 ## 🔗 Frontend
 
-Este backend está diseñado para trabajar con [mi-drugstore-front](https://github.com/enzokippes/mi-drugstore-front).
+This API is designed to work with [mi-drugstore-front](https://github.com/enzokippes/mi-drugstore-front).
