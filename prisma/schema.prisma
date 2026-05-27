@@ -7,7 +7,6 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -15,6 +14,7 @@ model User {
   email    String  @unique
   password String
   name     String
+  role     String  @default("USER")
   orders   Order[]
 }
 
@@ -25,30 +25,57 @@ model Category {
 }
 
 model Product {
-  id         String      @id @default(uuid())
-  name       String
-  price      Float
-  stock      Int
-  categoryId String
-  category   Category    @relation(fields: [categoryId], references: [id])
-  orderItems OrderItem[]
+  id             String      @id @default(uuid())
+  name           String
+  price          Float
+  stock          Int         @default(0)
+  unlimitedStock Boolean     @default(false)
+  image          String?
+  isCombo        Boolean     @default(false)
+  categoryId     String
+  category       Category    @relation(fields: [categoryId], references: [id])
+  orderItems     OrderItem[]
 }
 
 model Order {
-  id        String      @id @default(uuid())
-  total     Float
-  createdAt DateTime    @default(now())
-  userId    String
-  user      User        @relation(fields: [userId], references: [id])
-  items     OrderItem[]
+  id            String      @id @default(uuid())
+  total         Float
+  deliveryType  String      @default("PICKUP")
+  address       String?
+  phone         String?
+  notes         String?
+  deliveryTime  String?
+  createdAt     DateTime    @default(now())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
+  items         OrderItem[]
 }
 
 model OrderItem {
-  id        String  @id @default(uuid())
-  quantity  Int
-  price     Float
-  orderId   String
-  productId String
-  order     Order   @relation(fields: [orderId], references: [id])
-  product   Product @relation(fields: [productId], references: [id])
+  id          String     @id @default(uuid())
+  quantity    Int
+  price       Float
+  productName String?
+  orderId     String
+  productId   String?
+  order       Order      @relation(fields: [orderId], references: [id])
+  product     Product?   @relation(fields: [productId], references: [id])
+}
+
+model Setting {
+  key   String @id
+  value String
+}
+
+model Promotion {
+  id            String    @id @default(uuid())
+  title         String
+  description   String
+  image         String?
+  price         Float
+  originalPrice Float?
+  active        Boolean   @default(true)
+  startDate     DateTime?
+  endDate       DateTime?
+  createdAt     DateTime  @default(now())
 }

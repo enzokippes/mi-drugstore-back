@@ -1,21 +1,26 @@
 import { Request, Response } from 'express';
 import * as orderService from '../services/order.service';
+import { sendSuccess, sendError } from '../utils/response';
 
 export const createOrder = async (req: Request, res: Response) => {
   try {
-    // Basic validation could go here, but we leave it raw for the "Plus"
-    const { total, items } = req.body;
-    const userId = (req as any).user.id; // From auth middleware
+    const { total, items, deliveryType, address, phone, notes, deliveryTime } = req.body;
+    const userId = (req as any).user.id;
 
     const order = await orderService.createOrderService({
       userId,
       total,
       items,
+      deliveryType: deliveryType || 'PICKUP',
+      address,
+      phone,
+      notes,
+      deliveryTime,
     });
-    
-    res.status(201).json(order);
+
+    sendSuccess(res, order, 'Order created successfully', 201);
   } catch (error: any) {
-    res.status(400).json({ message: error.message || 'Error creating order' });
+    sendError(res, error.message || 'Error creating order', 400);
   }
 };
 
@@ -23,8 +28,8 @@ export const getMyOrders = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.id;
     const orders = await orderService.getUserOrdersService(userId);
-    res.status(200).json(orders);
+    sendSuccess(res, orders);
   } catch (error: any) {
-    res.status(500).json({ message: error.message || 'Error fetching orders' });
+    sendError(res, error.message || 'Error fetching orders', 500);
   }
 };

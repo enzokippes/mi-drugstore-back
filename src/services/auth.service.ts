@@ -13,11 +13,7 @@ export const registerService = async (name: string, email: string, passwordStr: 
   const password = await bcrypt.hash(passwordStr, salt);
 
   const user = await prisma.user.create({
-    data: {
-      name,
-      email,
-      password,
-    },
+    data: { name, email, password, role: 'USER' },
   });
 
   const payload: AuthPayload = { id: user.id, email: user.email };
@@ -26,7 +22,7 @@ export const registerService = async (name: string, email: string, passwordStr: 
   });
 
   return {
-    user: { id: user.id, name: user.name, email: user.email },
+    user: { id: user.id, name: user.name, email: user.email, role: user.role },
     token,
   };
 };
@@ -48,7 +44,7 @@ export const loginService = async (email: string, passwordStr: string) => {
   });
 
   return {
-    user: { id: user.id, name: user.name, email: user.email },
+    user: { id: user.id, name: user.name, email: user.email, role: user.role },
     token,
   };
 };

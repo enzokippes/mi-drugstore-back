@@ -1,13 +1,14 @@
 import { Request, Response } from 'express';
 import * as authService from '../services/auth.service';
+import { sendSuccess, sendError } from '../utils/response';
 
 export const register = async (req: Request, res: Response) => {
   try {
     const { name, email, password } = req.body;
     const result = await authService.registerService(name, email, password);
-    res.status(201).json(result);
+    sendSuccess(res, result, 'User registered successfully', 201);
   } catch (error: any) {
-    res.status(400).json({ message: error.message || 'Error registering user' });
+    sendError(res, error.message || 'Error registering user', 400);
   }
 };
 
@@ -15,8 +16,8 @@ export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
     const result = await authService.loginService(email, password);
-    res.status(200).json(result);
+    sendSuccess(res, result, 'Login successful');
   } catch (error: any) {
-    res.status(400).json({ message: error.message || 'Error logging in' });
+    sendError(res, error.message || 'Error logging in', 400);
   }
 };

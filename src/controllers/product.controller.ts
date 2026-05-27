@@ -1,50 +1,77 @@
 import { Request, Response } from 'express';
 import * as productService from '../services/product.service';
+import { sendSuccess, sendError } from '../utils/response';
 
-export const getProducts = async (req: Request, res: Response) => {
+export const getProducts = async (_req: Request, res: Response) => {
   try {
     const products = await productService.getProductsService();
-    res.status(200).json(products);
+    sendSuccess(res, products);
   } catch (error: any) {
-    res.status(500).json({ message: error.message || 'Error fetching products' });
+    sendError(res, error.message || 'Error fetching products', 500);
   }
 };
 
 export const getProductById = async (req: Request, res: Response) => {
   try {
-    const product = await productService.getProductByIdService(req.params.id as string);
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const product = await productService.getProductByIdService(id);
     if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
+      return sendError(res, 'Product not found', 404);
     }
-    res.status(200).json(product);
+    sendSuccess(res, product);
   } catch (error: any) {
-    res.status(500).json({ message: error.message || 'Error fetching product' });
+    sendError(res, error.message || 'Error fetching product', 500);
   }
 };
 
 export const createProduct = async (req: Request, res: Response) => {
   try {
-    const product = await productService.createProductService(req.body);
-    res.status(201).json(product);
+    const { name, price, stock, unlimitedStock, categoryId, isCombo } = req.body;
+    const image = req.file ? `/uploads/${req.file.filename}` : undefined;
+
+    const product = await productService.createProductService({
+      name,
+      price: parseFloat(price),
+      stock: parseInt(stock, 10) || 0,
+      unlimitedStock: unlimitedStock === 'true' || unlimitedStock === true,
+      isCombo: isCombo === 'true' || isCombo === true,
+      image,
+      categoryId,
+    });
+    sendSuccess(res, product, 'Product created successfully', 201);
   } catch (error: any) {
-    res.status(400).json({ message: error.message || 'Error creating product' });
+    sendError(res, error.message || 'Error creating product', 400);
   }
 };
 
 export const updateProduct = async (req: Request, res: Response) => {
   try {
-    const product = await productService.updateProductService(req.params.id as string, req.body);
-    res.status(200).json(product);
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const { name, price, stock, unlimitedStock, categoryId, isCombo } = req.body;
+    const image = req.file ? `/uploads/${req.file.filename}` : undefined;
+
+    const updateData: any = {};
+    if (name !== undefined) updateData.name = name;
+    if (price !== undefined) updateData.price = parseFloat(price);
+    if (stock !== undefined) updateData.stock = parseInt(stock, 10) || 0;
+    if (unlimitedStock !== undefined) updateData.unlimitedStock = unlimitedStock === 'true' || unlimitedStock === true;
+    if (categoryId !== undefined) updateData.categoryId = categoryId;
+    if (isCombo !== undefined) updateData.isCombo = isCombo === 'true' || isCombo === true;
+    if (image) updateData.image = image;
+
+    const product = await productService.updateProductService(id, updateData);
+    sendSuccess(res, product, 'Product updated successfully');
   } catch (error: any) {
-    res.status(400).json({ message: error.message || 'Error updating product' });
+    sendError(res, error.message || 'Error updating product', 400);
   }
 };
 
 export const deleteProduct = async (req: Request, res: Response) => {
   try {
-    await productService.deleteProductService(req.params.id as string);
-    res.status(200).json({ message: 'Product deleted successfully' });
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    await productService.deleteProductService(id);
+    sendSuccess(res, null, 'Product deleted successfully');
   } catch (error: any) {
-    res.status(400).json({ message: error.message || 'Error deleting product' });
+    sendError(res, error.message || 'Error deleting product', 400);
   }
 };
