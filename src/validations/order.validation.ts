@@ -1,25 +1,24 @@
-import { body } from 'express-validator';
+import { z } from 'zod';
 
-export const orderValidation = [
-  body('total')
-    .isFloat({ gt: 0 }).withMessage('total must be a number greater than 0'),
-  body('items')
-    .isArray({ min: 1 }).withMessage('items must be a non-empty array'),
-  body('items.*.productId')
-    .isString().notEmpty().withMessage('productId is required'),
-  body('items.*.quantity')
-    .isInt({ min: 1 }).withMessage('quantity must be an integer >= 1'),
-  body('items.*.price')
-    .isFloat({ gt: 0 }).withMessage('price must be a number greater than 0'),
-  body('deliveryType')
-    .isIn(['PICKUP', 'DELIVERY']).withMessage('deliveryType must be PICKUP or DELIVERY'),
-  body('address')
-    .if(body('deliveryType').equals('DELIVERY'))
-    .isString().isLength({ min: 5 }).withMessage('address is required for delivery (min 5 chars)'),
-  body('phone')
-    .if(body('deliveryType').equals('DELIVERY'))
-    .isString().notEmpty().withMessage('phone is required for delivery'),
-  body('deliveryTime')
-    .if(body('deliveryType').equals('DELIVERY'))
-    .isString().notEmpty().withMessage('deliveryTime is required for delivery'),
-];
+const orderItemSchema = z.object({
+  productId: z.string().min(1, 'productId es requerido'),
+  quantity: z.number().int().min(1, 'La cantidad debe ser al menos 1'),
+  price: z.number().positive('El precio debe ser mayor a 0'),
+});
+
+export const createOrderSchema = z.object({
+  total: z.number().positive('El total debe ser mayor a 0'),
+  items: z.array(orderItemSchema).min(1, 'El pedido debe tener al menos un item'),
+  deliveryType: z.enum(['PICKUP', 'DELIVERY'], { message: 'deliveryType debe ser PICKUP o DELIVERY' }),
+  address: z.string().min(5, 'La direccion debe tener al menos 5 caracteres').optional(),
+  phone: z.string().min(1, 'El telefono es requerido').optional(),
+  notes: z.string().max(500, 'Las notas no pueden superar 500 caracteres').optional(),
+  deliveryTime: z.string().optional(),
+}).refine(
+  (data) => data.deliveryType !== 'DELIVERY' || (!!data.address && !!data.phone && !!data.deliveryTime),
+  { message: 'Direccion, telefono y horario son requeridos para delivery' }
+);
+
+export const updateOrderStatusSchema = z.object({
+  status: z.enum(['PENDING', 'CONFIRMED', 'DELIVERED', 'CANCELLED'], { message: 'Status invalido' }),
+});

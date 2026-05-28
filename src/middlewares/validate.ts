@@ -1,11 +1,22 @@
+import { ZodSchema } from 'zod';
 import { Request, Response, NextFunction } from 'express';
-import { validationResult } from 'express-validator';
-import { sendError } from '../utils/response';
 
-export const validate = (req: Request, res: Response, next: NextFunction) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return sendError(res, 'Validation failed', 400, errors.array());
-  }
-  next();
+export const validateZod = (schema: ZodSchema) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const result = schema.safeParse(req.body);
+    if (!result.success) {
+      const errors = result.error.issues.map(e => ({
+        field: e.path.map(String).join('.'),
+        message: e.message,
+      }));
+      res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors,
+      });
+      return;
+    }
+    req.body = result.data;
+    next();
+  };
 };

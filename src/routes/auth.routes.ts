@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { login, register } from '../controllers/auth.controller';
+import { registerSchema, loginSchema } from '../validations/auth.validation';
+import { validateZod } from '../middlewares/validate';
 
 const router = Router();
 
@@ -26,15 +28,15 @@ const router = Router();
  *                 example: juan@email.com
  *               password:
  *                 type: string
- *                 minLength: 6
- *                 example: password123
+ *                 minLength: 8
+ *                 example: Password123
  *     responses:
  *       201:
  *         description: User registered successfully
  *       400:
  *         description: Validation error or user already exists
  */
-router.post('/register', register);
+router.post('/register', validateZod(registerSchema), register);
 
 /**
  * @swagger
@@ -56,13 +58,13 @@ router.post('/register', register);
  *                 example: juan@email.com
  *               password:
  *                 type: string
- *                 example: password123
+ *                 example: Password123
  *     responses:
  *       200:
  *         description: Login successful, returns user and token
  *       400:
  *         description: Invalid credentials
  */
-router.post('/login', login);
+router.post('/login', validateZod(loginSchema), login);
 
 export default router;

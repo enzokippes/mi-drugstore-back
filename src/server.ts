@@ -13,6 +13,7 @@ import categoryRoutes from './routes/category.routes';
 import orderRoutes from './routes/order.routes';
 import settingsRoutes from './routes/settings.routes';
 import promotionRoutes from './routes/promotion.routes';
+import paymentRoutes from './routes/payment.routes';
 
 dotenv.config();
 
@@ -68,6 +69,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/promotions', promotionRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // Health check
 app.get('/health', (_req: Request, res: Response) => {
@@ -82,6 +84,11 @@ app.get('/health', (_req: Request, res: Response) => {
     status: 'OK',
     uptime: `${hours}h ${minutes}m ${seconds}s`,
   });
+});
+
+// 404 handler
+app.use((_req: Request, res: Response) => {
+  res.status(404).json({ success: false, message: 'Route not found' });
 });
 
 // Global error handler

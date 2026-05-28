@@ -1,149 +1,229 @@
-# 💊 Mi Drugstore — Backend API
+# Barba Negra Drugstore — Backend API
 
-REST API for an online pharmacy. Built with **Express 5**, **TypeScript**, **Prisma ORM**, and **JWT** authentication.
+REST API para una farmacia/drugstore online con autenticacion JWT, roles, validacion Zod, integracion con MercadoPago y envio de emails con Resend.
 
-## 🛠️ Tech Stack
+## Tech Stack
 
-| Technology | Purpose |
-|------------|---------|
-| Node.js + TypeScript | Runtime and static typing |
-| Express 5 | HTTP framework |
-| Prisma ORM | Database access layer |
-| SQLite (libsql) | Local database / [Turso](https://turso.tech) in production |
-| bcryptjs | Password hashing |
-| JSON Web Tokens | Stateless authentication |
-| ts-node-dev | Hot reload for development |
+| Tecnologia | Proposito |
+|------------|-----------|
+| Node.js + TypeScript 6 | Runtime y tipado estatico |
+| Express 5 | Framework HTTP |
+| Prisma ORM 7 | Acceso a base de datos |
+| SQLite / Turso (libsql) | Base de datos local y produccion |
+| Zod | Validacion de inputs |
+| bcryptjs | Hashing de contraseñas |
+| JWT | Autenticacion stateless |
+| Resend | Envio de emails transaccionales |
+| MercadoPago SDK | Pasarela de pagos |
+| Multer | Upload de imagenes |
+| Helmet + Rate Limit | Seguridad HTTP |
+| Swagger | Documentacion automatica de API |
 
-## 📁 Project Structure
+## Estructura del Proyecto
 
 ```
 src/
 ├── config/
-│   └── db.ts              # Prisma client instance
+│   └── db.ts                  # Cliente Prisma
 ├── controllers/
-│   ├── auth.controller.ts
-│   ├── category.controller.ts
-│   ├── order.controller.ts
-│   └── product.controller.ts
+│   ├── auth.controller.ts     # Login y registro
+│   ├── category.controller.ts # CRUD categorias
+│   ├── order.controller.ts    # CRUD ordenes + admin
+│   ├── payment.controller.ts  # MercadoPago preferencias + webhook
+│   ├── product.controller.ts  # CRUD productos
+│   ├── promotion.controller.ts# CRUD promociones
+│   └── settings.controller.ts # Configuracion global
 ├── middlewares/
-│   └── authMiddleware.ts  # JWT verification
+│   ├── authMiddleware.ts      # Verificacion JWT
+│   ├── adminMiddleware.ts     # Guard de rol ADMIN
+│   ├── upload.ts              # Configuracion Multer
+│   └── validate.ts            # Middleware de validacion Zod
 ├── routes/
 │   ├── auth.routes.ts
 │   ├── category.routes.ts
 │   ├── order.routes.ts
-│   └── product.routes.ts
+│   ├── payment.routes.ts
+│   ├── product.routes.ts
+│   ├── promotion.routes.ts
+│   └── settings.routes.ts
 ├── services/
-│   ├── auth.service.ts
+│   ├── auth.service.ts        # Logica de autenticacion
 │   ├── category.service.ts
-│   ├── order.service.ts
-│   └── product.service.ts
+│   ├── email.service.ts       # Envio de emails con Resend
+│   ├── order.service.ts       # Logica de ordenes + descuento stock
+│   ├── payment.service.ts     # Integracion MercadoPago
+│   ├── product.service.ts
+│   ├── promotion.service.ts
+│   └── settings.service.ts
 ├── types/
-│   └── index.d.ts
-└── server.ts
+│   └── index.d.ts             # Tipos Express + AuthPayload
+├── utils/
+│   └── response.ts            # Helpers sendSuccess/sendError
+├── validations/
+│   ├── auth.validation.ts     # Schemas Zod para auth
+│   ├── category.validation.ts
+│   ├── order.validation.ts
+│   ├── product.validation.ts
+│   ├── promotion.validation.ts
+│   └── settings.validation.ts
+└── server.ts                  # Entry point
 prisma/
-├── schema.prisma
-└── seed.ts
+├── schema.prisma              # Schema de base de datos
+└── seed.ts                    # Datos de ejemplo
 ```
 
-## ⚙️ Environment Variables
+## Variables de Entorno
 
-Create a `.env` file in the project root:
+Crear un archivo `.env` en la raiz del proyecto:
 
 ```env
+# Base de datos
 DATABASE_URL="file:./dev.db"
-JWT_SECRET="your_secret_key_here"
+
+# Autenticacion
+JWT_SECRET="tu_clave_secreta_larga_y_aleatoria"
+
+# Servidor
 PORT=3000
+FRONTEND_URL="http://localhost:5173"
+BACKEND_URL="http://localhost:3000"
+
+# Email (Resend) - https://resend.com/api-keys
+RESEND_API_KEY="re_xxxxx"
+ADMIN_EMAIL="admin@tudominio.com"
+
+# MercadoPago - https://www.mercadopago.com.ar/developers/panel/credentials
+MP_ACCESS_TOKEN="APP_USR-xxxxx"
 ```
 
-> For **Turso** in production, replace `DATABASE_URL` with your Turso database URL and add `TURSO_AUTH_TOKEN`.
+Para produccion con **Turso**, reemplazar `DATABASE_URL` con la URL de Turso y agregar `TURSO_AUTH_TOKEN`.
 
-## 🚀 Getting Started
+## Instalacion
 
 ```bash
-# 1. Install dependencies (auto-generates Prisma client)
+# 1. Instalar dependencias (genera el cliente Prisma automaticamente)
 npm install
 
-# 2. Push the schema to the database
+# 2. Sincronizar schema con la base de datos
 npx prisma db push
 
-# 3. (Optional) Seed the database with sample data
-npx prisma db seed
+# 3. (Opcional) Cargar datos de ejemplo
+npm run seed
 
-# 4. Start in development mode
+# 4. Iniciar en modo desarrollo
 npm run dev
 ```
 
-The server runs at `http://localhost:3000`.
+El servidor corre en `http://localhost:3000`.
+Documentacion Swagger en `http://localhost:3000/api-docs`.
 
-## 📋 API Endpoints
+## Endpoints de la API
 
 ### Auth — `/api/auth`
 
-| Method | Route | Description | Auth |
-|--------|-------|-------------|------|
-| POST | `/register` | Register a new user | ❌ |
-| POST | `/login` | Log in and receive a JWT | ❌ |
+| Metodo | Ruta | Descripcion | Auth | Rol |
+|--------|------|-------------|------|-----|
+| POST | `/register` | Registrar usuario | No | - |
+| POST | `/login` | Iniciar sesion | No | - |
 
-### Products — `/api/products`
+### Productos — `/api/products`
 
-| Method | Route | Description | Auth |
-|--------|-------|-------------|------|
-| GET | `/` | List all products | ❌ |
-| GET | `/:id` | Get a single product | ❌ |
-| POST | `/` | Create a product | ✅ |
-| PUT | `/:id` | Update a product | ✅ |
-| DELETE | `/:id` | Delete a product | ✅ |
+| Metodo | Ruta | Descripcion | Auth | Rol |
+|--------|------|-------------|------|-----|
+| GET | `/` | Listar productos | No | - |
+| GET | `/:id` | Obtener producto | No | - |
+| POST | `/` | Crear producto | Si | ADMIN |
+| PUT | `/:id` | Actualizar producto | Si | ADMIN |
+| DELETE | `/:id` | Eliminar producto | Si | ADMIN |
 
-### Categories — `/api/categories`
+### Categorias — `/api/categories`
 
-| Method | Route | Description | Auth |
-|--------|-------|-------------|------|
-| GET | `/` | List all categories | ❌ |
-| POST | `/` | Create a category | ✅ |
-| PUT | `/:id` | Update a category | ✅ |
-| DELETE | `/:id` | Delete a category | ✅ |
+| Metodo | Ruta | Descripcion | Auth | Rol |
+|--------|------|-------------|------|-----|
+| GET | `/` | Listar categorias | No | - |
+| GET | `/:id` | Obtener categoria | No | - |
+| POST | `/` | Crear categoria | Si | ADMIN |
+| PUT | `/:id` | Actualizar categoria | Si | ADMIN |
+| DELETE | `/:id` | Eliminar categoria | Si | ADMIN |
 
-### Orders — `/api/orders`
+### Ordenes — `/api/orders`
 
-| Method | Route | Description | Auth |
-|--------|-------|-------------|------|
-| POST | `/` | Place a new order | ✅ |
-| GET | `/my-orders` | Get current user's orders | ✅ |
+| Metodo | Ruta | Descripcion | Auth | Rol |
+|--------|------|-------------|------|-----|
+| POST | `/` | Crear pedido | Si | USER+ |
+| GET | `/my-orders` | Mis pedidos | Si | USER+ |
+| GET | `/` | Todas las ordenes | Si | ADMIN |
+| PUT | `/:id/status` | Cambiar estado | Si | ADMIN |
+
+### Promociones — `/api/promotions`
+
+| Metodo | Ruta | Descripcion | Auth | Rol |
+|--------|------|-------------|------|-----|
+| GET | `/active` | Promos activas | No | - |
+| GET | `/` | Todas las promos | No | - |
+| GET | `/:id` | Obtener promo | No | - |
+| POST | `/` | Crear promo | Si | ADMIN |
+| PUT | `/:id` | Actualizar promo | Si | ADMIN |
+| DELETE | `/:id` | Eliminar promo | Si | ADMIN |
+
+### Pagos — `/api/payments`
+
+| Metodo | Ruta | Descripcion | Auth | Rol |
+|--------|------|-------------|------|-----|
+| POST | `/create-preference` | Crear preferencia MP | Si | USER+ |
+| POST | `/webhook` | Webhook de MercadoPago | No | - |
+
+### Configuracion — `/api/settings`
+
+| Metodo | Ruta | Descripcion | Auth | Rol |
+|--------|------|-------------|------|-----|
+| GET | `/` | Obtener settings | Si | ADMIN |
+| PUT | `/` | Actualizar setting | Si | ADMIN |
 
 ### Health Check
 
 ```
-GET /health → { "status": "OK" }
+GET /health → { "status": "OK", "uptime": "..." }
 ```
 
-## 🔐 Authentication
+## Autenticacion
 
-Protected routes require the following header:
+Las rutas protegidas requieren el header:
 
 ```
 Authorization: Bearer <token>
 ```
 
-The token is returned on login or registration.
+El token se obtiene al iniciar sesion o registrarse. Tiene una duracion de 24 horas.
 
-## 🗃️ Data Models
+## Roles y Permisos
 
-```prisma
-User       → id, name, email, password
-Product    → id, name, price, stock, categoryId
-Category   → id, name
-Order      → id, total, createdAt, userId
-OrderItem  → id, quantity, price, orderId, productId
+| Rol | Permisos |
+|-----|----------|
+| USER | Crear ordenes, ver sus ordenes, pagar |
+| ADMIN | Todo lo de USER + gestionar productos, categorias, promos, settings y ver todas las ordenes |
+
+## Modelos de Datos
+
+```
+User        → id, name, email, password, role
+Product     → id, name, price, stock, unlimitedStock, image, isCombo, categoryId
+Category    → id, name
+Order       → id, total, deliveryType, address, phone, notes, deliveryTime, status, paymentStatus, paymentId, userId
+OrderItem   → id, quantity, price, productName, orderId, productId
+Promotion   → id, title, description, image, price, originalPrice, active, startDate, endDate
+Setting     → key, value
 ```
 
-## 📜 Available Scripts
+## Scripts
 
-| Command | Description |
+| Comando | Descripcion |
 |---------|-------------|
-| `npm run dev` | Start with hot reload |
-| `npm run build` | Compile TypeScript to JS |
-| `npm start` | Production (build + prisma db push) |
+| `npm run dev` | Desarrollo con hot reload |
+| `npm run build` | Compilar TypeScript |
+| `npm start` | Produccion (build + prisma db push) |
+| `npm run seed` | Cargar datos de ejemplo |
 
-## 🔗 Frontend
+## Frontend
 
-This API is designed to work with [mi-drugstore-front](https://github.com/enzokippes/mi-drugstore-front).
+Esta API esta diseñada para funcionar con [mi-drugstore-front](https://github.com/enzokippes/mi-drugstore-front).

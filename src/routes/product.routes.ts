@@ -2,8 +2,8 @@ import { Router } from 'express';
 import { getProducts, getProductById, createProduct, updateProduct, deleteProduct } from '../controllers/product.controller';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import { adminMiddleware } from '../middlewares/adminMiddleware';
-import { productValidation } from '../validations/product.validation';
-import { validate } from '../middlewares/validate';
+import { productSchema } from '../validations/product.validation';
+import { validateZod } from '../middlewares/validate';
 import { upload } from '../middlewares/upload';
 
 const router = Router();
@@ -40,9 +40,9 @@ router.get('/', getProducts);
  */
 router.get('/:id', getProductById);
 
-router.post('/', authMiddleware, adminMiddleware, upload.single('image'), productValidation, validate, createProduct);
+router.post('/', authMiddleware, adminMiddleware, upload.single('image'), validateZod(productSchema), createProduct);
 
-router.put('/:id', authMiddleware, adminMiddleware, upload.single('image'), productValidation, validate, updateProduct);
+router.put('/:id', authMiddleware, adminMiddleware, upload.single('image'), validateZod(productSchema), updateProduct);
 
 router.delete('/:id', authMiddleware, adminMiddleware, deleteProduct);
 

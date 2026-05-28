@@ -1,17 +1,10 @@
-import { body } from 'express-validator';
+import { z } from 'zod';
 
-export const productValidation = [
-  body('name')
-    .isString().withMessage('name must be a string')
-    .isLength({ min: 1, max: 100 }).withMessage('name must be between 1 and 100 characters'),
-  body('price')
-    .isFloat({ gt: 0 }).withMessage('price must be a number greater than 0'),
-  body('stock')
-    .optional()
-    .isInt({ min: 0 }).withMessage('stock must be an integer >= 0'),
-  body('categoryId')
-    .isString().notEmpty().withMessage('categoryId is required'),
-  body('isCombo')
-    .optional()
-    .isIn(['true', 'false', true, false]).withMessage('isCombo must be a boolean'),
-];
+export const productSchema = z.object({
+  name: z.string().min(1, 'El nombre es requerido').max(100, 'El nombre no puede superar 100 caracteres').trim(),
+  price: z.coerce.number().positive('El precio debe ser mayor a 0'),
+  stock: z.coerce.number().int().min(0, 'El stock no puede ser negativo').optional().default(0),
+  unlimitedStock: z.coerce.boolean().optional().default(false),
+  categoryId: z.string().min(1, 'La categoria es requerida'),
+  isCombo: z.coerce.boolean().optional().default(false),
+});

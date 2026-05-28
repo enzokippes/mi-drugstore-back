@@ -2,8 +2,8 @@ import { Router } from 'express';
 import * as categoryController from '../controllers/category.controller';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import { adminMiddleware } from '../middlewares/adminMiddleware';
-import { categoryValidation } from '../validations/category.validation';
-import { validate } from '../middlewares/validate';
+import { categorySchema } from '../validations/category.validation';
+import { validateZod } from '../middlewares/validate';
 
 const router = Router();
 
@@ -67,7 +67,7 @@ router.get('/:id', categoryController.getCategoryById);
  *       401:
  *         description: Unauthorized
  */
-router.post('/', authMiddleware, adminMiddleware, categoryValidation, validate, categoryController.createCategory);
+router.post('/', authMiddleware, adminMiddleware, validateZod(categorySchema), categoryController.createCategory);
 
 /**
  * @swagger
@@ -101,7 +101,7 @@ router.post('/', authMiddleware, adminMiddleware, categoryValidation, validate, 
  *       404:
  *         description: Category not found
  */
-router.put('/:id', authMiddleware, adminMiddleware, categoryValidation, validate, categoryController.updateCategory);
+router.put('/:id', authMiddleware, adminMiddleware, validateZod(categorySchema), categoryController.updateCategory);
 
 /**
  * @swagger

@@ -1,15 +1,8 @@
-import { body } from 'express-validator';
+import { z } from 'zod';
 
-export const promotionValidation = [
-  body('title')
-    .isString().withMessage('title must be a string')
-    .isLength({ min: 1, max: 100 }).withMessage('title must be between 1 and 100 characters'),
-  body('description')
-    .isString().withMessage('description must be a string')
-    .isLength({ min: 1, max: 500 }).withMessage('description must be between 1 and 500 characters'),
-  body('price')
-    .isFloat({ gt: 0 }).withMessage('price must be a number greater than 0'),
-  body('originalPrice')
-    .optional()
-    .isFloat({ gt: 0 }).withMessage('originalPrice must be a number greater than 0'),
-];
+export const promotionSchema = z.object({
+  title: z.string().min(1, 'El titulo es requerido').max(100, 'El titulo no puede superar 100 caracteres').trim(),
+  description: z.string().min(1, 'La descripcion es requerida').max(500, 'La descripcion no puede superar 500 caracteres').trim(),
+  price: z.coerce.number().positive('El precio debe ser mayor a 0'),
+  originalPrice: z.coerce.number().positive('El precio original debe ser mayor a 0').optional(),
+});

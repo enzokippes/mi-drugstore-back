@@ -1,7 +1,5 @@
-import { body } from 'express-validator';
+import { z } from 'zod';
 
-export const categoryValidation = [
-  body('name')
-    .isString().withMessage('name must be a string')
-    .isLength({ min: 1, max: 50 }).withMessage('name must be between 1 and 50 characters'),
-];
+export const categorySchema = z.object({
+  name: z.string().min(1, 'El nombre es requerido').max(50, 'El nombre no puede superar 50 caracteres').trim(),
+});

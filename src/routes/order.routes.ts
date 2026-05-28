@@ -1,8 +1,9 @@
 import { Router } from 'express';
 import * as orderController from '../controllers/order.controller';
 import { authMiddleware } from '../middlewares/authMiddleware';
-import { orderValidation } from '../validations/order.validation';
-import { validate } from '../middlewares/validate';
+import { adminMiddleware } from '../middlewares/adminMiddleware';
+import { createOrderSchema, updateOrderStatusSchema } from '../validations/order.validation';
+import { validateZod } from '../middlewares/validate';
 
 const router = Router();
 
@@ -52,7 +53,25 @@ const router = Router();
  *       401:
  *         description: Unauthorized
  */
-router.post('/', authMiddleware, orderValidation, validate, orderController.createOrder);
+router.post('/', authMiddleware, validateZod(createOrderSchema), orderController.createOrder);
+
+/**
+ * @swagger
+ * /api/orders:
+ *   get:
+ *     summary: Get all orders (admin only)
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of all orders
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ */
+router.get('/', authMiddleware, adminMiddleware, orderController.getAllOrders);
 
 /**
  * @swagger
@@ -69,5 +88,42 @@ router.post('/', authMiddleware, orderValidation, validate, orderController.crea
  *         description: Unauthorized
  */
 router.get('/my-orders', authMiddleware, orderController.getMyOrders);
+
+/**
+ * @swagger
+ * /api/orders/{id}/status:
+ *   put:
+ *     summary: Update order status (admin only)
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [status]
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [PENDING, CONFIRMED, DELIVERED, CANCELLED]
+ *     responses:
+ *       200:
+ *         description: Order status updated
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ */
+router.put('/:id/status', authMiddleware, adminMiddleware, validateZod(updateOrderStatusSchema), orderController.updateOrderStatus);
 
 export default router;
