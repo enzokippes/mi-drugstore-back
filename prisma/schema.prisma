@@ -7,48 +7,60 @@ datasource db {
 }
 
 model User {
-  id       String  @id @default(uuid())
-  email    String  @unique
-  password String
-  name     String
-  role     String  @default("USER")
-  orders   Order[]
+  id            String         @id @default(uuid())
+  email         String         @unique
+  password      String
+  name          String
+  phone         String?
+  role          String         @default("USER")
+  orders        Order[]
+  loyaltyPoints LoyaltyPoint[]
+  addresses     Address[]
 }
 
 model Category {
-  id       String    @id @default(uuid())
-  name     String
-  products Product[]
+  id         String     @id @default(uuid())
+  name       String
+  parentId   String?
+  parent     Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children   Category[] @relation("CategoryHierarchy")
+  products   Product[]
 }
 
 model Product {
-  id             String      @id @default(uuid())
+  id             String       @id @default(uuid())
   name           String
+  description    String?
   price          Float
-  stock          Int         @default(0)
-  unlimitedStock Boolean     @default(false)
+  stock          Int          @default(0)
+  unlimitedStock Boolean      @default(false)
   image          String?
-  isCombo        Boolean     @default(false)
+  isCombo        Boolean      @default(false)
+  isFeatured     Boolean      @default(false)
   categoryId     String
-  category       Category    @relation(fields: [categoryId], references: [id])
+  category       Category     @relation(fields: [categoryId], references: [id])
   orderItems     OrderItem[]
+  pointRewards   PointReward[]
 }
 
 model Order {
-  id            String      @id @default(uuid())
-  total         Float
-  deliveryType  String      @default("PICKUP")
-  address       String?
-  phone         String?
-  notes         String?
-  deliveryTime  String?
-  status        String      @default("PENDING")
-  paymentStatus String      @default("PENDING")
-  paymentId     String?
-  createdAt     DateTime    @default(now())
-  userId        String
-  user          User        @relation(fields: [userId], references: [id])
-  items         OrderItem[]
+  id             String        @id @default(uuid())
+  total          Float
+  deliveryType   String        @default("PICKUP")
+  deliveryCost   Float         @default(0)
+  address        String?
+  phone          String?
+  notes          String?
+  deliveryTime   String?
+  status         String        @default("PENDING")
+  paymentStatus  String        @default("PENDING")
+  paymentId      String?
+  createdAt      DateTime      @default(now())
+  userId         String
+  user           User          @relation(fields: [userId], references: [id])
+  deliveryZoneId String?
+  deliveryZone   DeliveryZone? @relation(fields: [deliveryZoneId], references: [id])
+  items          OrderItem[]
 }
 
 model OrderItem {
@@ -78,4 +90,49 @@ model Promotion {
   startDate     DateTime?
   endDate       DateTime?
   createdAt     DateTime  @default(now())
+}
+
+model DeliveryZone {
+  id            String    @id @default(uuid())
+  name          String
+  basePrice     Float
+  surcharge     Float     @default(0)
+  maxDistanceKm Float?
+  active        Boolean   @default(true)
+  orders        Order[]
+  addresses     Address[]
+}
+
+model LoyaltyPoint {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  points    Int
+  reason    String
+  orderId   String?
+  createdAt DateTime @default(now())
+}
+
+model PointReward {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  pointsCost  Int
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id])
+  image       String?
+  active      Boolean  @default(true)
+}
+
+model Address {
+  id        String  @id @default(uuid())
+  userId    String
+  user      User    @relation(fields: [userId], references: [id])
+  label     String
+  street    String
+  number    String
+  notes     String?
+  zoneId    String?
+  zone      DeliveryZone? @relation(fields: [zoneId], references: [id])
+  isDefault Boolean @default(false)
 }

@@ -10,6 +10,7 @@ export const createOrderSchema = z.object({
   total: z.number().positive('El total debe ser mayor a 0'),
   items: z.array(orderItemSchema).min(1, 'El pedido debe tener al menos un item'),
   deliveryType: z.enum(['PICKUP', 'DELIVERY'], { message: 'deliveryType debe ser PICKUP o DELIVERY' }),
+  deliveryZoneId: z.string().optional(),
   address: z.string().min(5, 'La direccion debe tener al menos 5 caracteres').optional(),
   phone: z.string().min(1, 'El telefono es requerido').optional(),
   notes: z.string().max(500, 'Las notas no pueden superar 500 caracteres').optional(),
@@ -20,5 +21,5 @@ export const createOrderSchema = z.object({
 );
 
 export const updateOrderStatusSchema = z.object({
-  status: z.enum(['PENDING', 'CONFIRMED', 'DELIVERED', 'CANCELLED'], { message: 'Status invalido' }),
+  status: z.enum(['PENDING', 'CONFIRMED', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED'], { message: 'Status invalido' }),
 });

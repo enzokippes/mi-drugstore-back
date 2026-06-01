@@ -1,5 +1,6 @@
 import prisma from '../config/db';
-import { sendOrderConfirmation, sendAdminOrderNotification } from './email.service';
+import { sendOrderConfirmation, sendAdminOrderNotification, sendStatusChangeEmail } from './email.service';
+import { awardPointsForOrderService } from './loyalty.service';
 
 interface OrderItemInput {
   productId: string;
@@ -12,6 +13,7 @@ interface CreateOrderInput {
   total: number;
   items: OrderItemInput[];
   deliveryType: string;
+  deliveryZoneId?: string;
   address?: string;
   phone?: string;
   notes?: string;
@@ -39,11 +41,21 @@ export const createOrderService = async (data: CreateOrderInput) => {
     }
   }
 
+  let deliveryCost = 0;
+  if (data.deliveryType === 'DELIVERY' && data.deliveryZoneId) {
+    const zone = await prisma.deliveryZone.findUnique({ where: { id: data.deliveryZoneId } });
+    if (zone && zone.active) {
+      deliveryCost = zone.basePrice + zone.surcharge;
+    }
+  }
+
   const order = await prisma.order.create({
     data: {
       userId: data.userId,
-      total: data.total,
+      total: data.total + deliveryCost,
       deliveryType: data.deliveryType,
+      deliveryCost,
+      deliveryZoneId: data.deliveryZoneId || null,
       address: data.address || null,
       phone: data.phone || null,
       notes: data.notes || null,
@@ -54,6 +66,7 @@ export const createOrderService = async (data: CreateOrderInput) => {
     },
     include: {
       items: true,
+      deliveryZone: true,
       user: {
         select: {
           name: true,
@@ -91,7 +104,8 @@ export const getUserOrdersService = async (userId: string) => {
         include: {
           product: true,
         }
-      }
+      },
+      deliveryZone: true,
     },
     orderBy: {
       createdAt: 'desc',
@@ -114,6 +128,7 @@ export const getAllOrdersService = async () => {
           product: true,
         },
       },
+      deliveryZone: true,
     },
     orderBy: {
       createdAt: 'desc',
@@ -122,11 +137,12 @@ export const getAllOrdersService = async () => {
 };
 
 export const updateOrderStatusService = async (orderId: string, status: string) => {
-  return await prisma.order.update({
+  const order = await prisma.order.update({
     where: { id: orderId },
     data: { status },
     include: {
       items: true,
+      deliveryZone: true,
       user: {
         select: {
           id: true,
@@ -136,6 +152,17 @@ export const updateOrderStatusService = async (orderId: string, status: string) 
       },
     },
   });
+
+  if (status === 'CONFIRMED' && order.user) {
+    const itemsTotal = order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    await awardPointsForOrderService(order.user.id, itemsTotal, order.id).catch(() => {});
+  }
+
+  if (order.user?.email && ['CONFIRMED', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED'].includes(status)) {
+    sendStatusChangeEmail(order.user.email, order.id, status).catch(() => {});
+  }
+
+  return order;
 };
 
 export const updatePaymentStatusService = async (orderId: string, paymentStatus: string, paymentId?: string) => {

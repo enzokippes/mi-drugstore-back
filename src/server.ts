@@ -14,6 +14,11 @@ import orderRoutes from './routes/order.routes';
 import settingsRoutes from './routes/settings.routes';
 import promotionRoutes from './routes/promotion.routes';
 import paymentRoutes from './routes/payment.routes';
+import deliveryZoneRoutes from './routes/delivery-zone.routes';
+import loyaltyRoutes from './routes/loyalty.routes';
+import popularRoutes from './routes/popular.routes';
+import addressRoutes from './routes/address.routes';
+import statsRoutes from './routes/stats.routes';
 
 dotenv.config();
 
@@ -31,14 +36,24 @@ app.use(morgan('dev'));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Rate limiting
-const limiter = rateLimit({
+const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Demasiados intentos, espera unos minutos.' },
+});
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 500,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Too many requests, please try again later.' },
 });
-app.use(limiter);
+
+app.use('/api/auth', authLimiter);
+app.use(apiLimiter);
 
 // Swagger setup
 const swaggerOptions: swaggerJsdoc.Options = {
@@ -70,6 +85,11 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/promotions', promotionRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/delivery-zones', deliveryZoneRoutes);
+app.use('/api/loyalty', loyaltyRoutes);
+app.use('/api/products', popularRoutes);
+app.use('/api/addresses', addressRoutes);
+app.use('/api/admin/stats', statsRoutes);
 
 // Health check
 app.get('/health', (_req: Request, res: Response) => {

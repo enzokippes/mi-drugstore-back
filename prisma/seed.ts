@@ -85,6 +85,82 @@ async function main() {
   }
   console.log('  ✅ Products created');
 
+  // Delivery Zones
+  const zonesData = [
+    { name: 'Centro', basePrice: 1500, surcharge: 0, maxDistanceKm: 3 },
+    { name: 'Norte', basePrice: 2000, surcharge: 500, maxDistanceKm: 5 },
+    { name: 'Sur', basePrice: 2000, surcharge: 500, maxDistanceKm: 5 },
+    { name: 'Este', basePrice: 2500, surcharge: 1000, maxDistanceKm: 7 },
+    { name: 'Oeste', basePrice: 2500, surcharge: 1000, maxDistanceKm: 7 },
+  ];
+
+  for (const zone of zonesData) {
+    await prisma.deliveryZone.create({ data: zone });
+  }
+  console.log('  ✅ Delivery zones created');
+
+  // Settings for loyalty points
+  await prisma.setting.upsert({
+    where: { key: 'pointsPerPeso' },
+    update: {},
+    create: { key: 'pointsPerPeso', value: '0.01' },
+  });
+
+  // Settings for store and delivery hours
+  await prisma.setting.upsert({
+    where: { key: 'storeHours' },
+    update: {},
+    create: {
+      key: 'storeHours',
+      value: JSON.stringify({
+        weekdays: { open: '07:00', close: '01:00' },
+        sunday: { open: '07:00', close: '01:00' },
+      }),
+    },
+  });
+
+  await prisma.setting.upsert({
+    where: { key: 'deliveryHours' },
+    update: {},
+    create: {
+      key: 'deliveryHours',
+      value: JSON.stringify({
+        weekdays: { open: '18:00', close: '01:00' },
+        sunday: { open: '18:00', close: '23:00' },
+      }),
+    },
+  });
+
+  console.log('  ✅ Loyalty and schedule settings created');
+
+  // Point Rewards
+  const dbBebidas = await prisma.category.findFirst({ where: { name: 'Bebidas' } });
+  const cocaProduct = dbBebidas ? await prisma.product.findFirst({ where: { name: 'Coca Cola 2L' } }) : null;
+
+  const rewardsData = [
+    {
+      name: 'Coca Cola 500ml',
+      description: 'Una Coca Cola bien fria de 500ml',
+      pointsCost: 50,
+      productId: cocaProduct?.id || null,
+    },
+    {
+      name: 'Descuento $500',
+      description: 'Descuento de $500 en tu proximo pedido',
+      pointsCost: 100,
+    },
+    {
+      name: 'Bolsa de Hielo Gratis',
+      description: 'Una bolsa de hielo 2.5kg gratis con tu pedido',
+      pointsCost: 30,
+    },
+  ];
+
+  for (const reward of rewardsData) {
+    await prisma.pointReward.create({ data: reward });
+  }
+  console.log('  ✅ Point rewards created');
+
   console.log('Database seeded successfully!');
 }
 

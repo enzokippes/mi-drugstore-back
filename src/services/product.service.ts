@@ -15,10 +15,12 @@ export const getProductByIdService = async (id: string) => {
 
 export const createProductService = async (data: {
   name: string;
+  description?: string;
   price: number;
   stock: number;
   unlimitedStock?: boolean;
   isCombo?: boolean;
+  isFeatured?: boolean;
   image?: string;
   categoryId: string;
 }) => {
@@ -34,10 +36,12 @@ export const createProductService = async (data: {
 
 export const updateProductService = async (id: string, data: {
   name?: string;
+  description?: string;
   price?: number;
   stock?: number;
   unlimitedStock?: boolean;
   isCombo?: boolean;
+  isFeatured?: boolean;
   image?: string;
   categoryId?: string;
 }) => {
