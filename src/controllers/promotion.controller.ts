@@ -36,7 +36,9 @@ export const getPromotionById = async (req: Request, res: Response) => {
 export const createPromotion = async (req: Request, res: Response) => {
   try {
     const { title, description, price, originalPrice, active, startDate, endDate } = req.body;
-    const image = req.file ? `/uploads/${req.file.filename}` : undefined;
+    const image = req.file
+      ? (req.file.path.startsWith('http') ? req.file.path : `/uploads/${req.file.filename}`)
+      : undefined;
 
     const promotion = await promotionService.createPromotionService({
       title,
@@ -58,7 +60,9 @@ export const updatePromotion = async (req: Request, res: Response) => {
   try {
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     const { title, description, price, originalPrice, active, startDate, endDate } = req.body;
-    const image = req.file ? `/uploads/${req.file.filename}` : undefined;
+    const image = req.file
+      ? (req.file.path.startsWith('http') ? req.file.path : `/uploads/${req.file.filename}`)
+      : undefined;
 
     const updateData: any = {};
     if (title !== undefined) updateData.title = title;

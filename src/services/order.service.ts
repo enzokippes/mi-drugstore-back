@@ -164,10 +164,3 @@ export const updateOrderStatusService = async (orderId: string, status: string) 
 
   return order;
 };
-
-export const updatePaymentStatusService = async (orderId: string, paymentStatus: string, paymentId?: string) => {
-  return await prisma.order.update({
-    where: { id: orderId },
-    data: { paymentStatus, paymentId },
-  });
-};

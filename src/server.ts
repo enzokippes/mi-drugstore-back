@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -6,21 +9,17 @@ import morgan from 'morgan';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import path from 'path';
-import dotenv from 'dotenv';
 import authRoutes from './routes/auth.routes';
 import productRoutes from './routes/product.routes';
 import categoryRoutes from './routes/category.routes';
 import orderRoutes from './routes/order.routes';
 import settingsRoutes from './routes/settings.routes';
 import promotionRoutes from './routes/promotion.routes';
-import paymentRoutes from './routes/payment.routes';
 import deliveryZoneRoutes from './routes/delivery-zone.routes';
 import loyaltyRoutes from './routes/loyalty.routes';
 import popularRoutes from './routes/popular.routes';
 import addressRoutes from './routes/address.routes';
 import statsRoutes from './routes/stats.routes';
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -32,7 +31,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
-// Static files for uploads
+// Static files for uploads (legacy - new uploads go to Cloudinary)
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Rate limiting
@@ -84,7 +83,6 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/promotions', promotionRoutes);
-app.use('/api/payments', paymentRoutes);
 app.use('/api/delivery-zones', deliveryZoneRoutes);
 app.use('/api/loyalty', loyaltyRoutes);
 app.use('/api/products', popularRoutes);

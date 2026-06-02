@@ -53,8 +53,6 @@ model Order {
   notes          String?
   deliveryTime   String?
   status         String        @default("PENDING")
-  paymentStatus  String        @default("PENDING")
-  paymentId      String?
   createdAt      DateTime      @default(now())
   userId         String
   user           User          @relation(fields: [userId], references: [id])

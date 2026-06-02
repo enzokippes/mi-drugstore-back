@@ -27,7 +27,9 @@ export const getProductById = async (req: Request, res: Response) => {
 export const createProduct = async (req: Request, res: Response) => {
   try {
     const { name, price, stock, unlimitedStock, categoryId, isCombo } = req.body;
-    const image = req.file ? `/uploads/${req.file.filename}` : undefined;
+    const image = req.file
+      ? (req.file.path.startsWith('http') ? req.file.path : `/uploads/${req.file.filename}`)
+      : undefined;
 
     const product = await productService.createProductService({
       name,
@@ -48,7 +50,9 @@ export const updateProduct = async (req: Request, res: Response) => {
   try {
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     const { name, price, stock, unlimitedStock, categoryId, isCombo } = req.body;
-    const image = req.file ? `/uploads/${req.file.filename}` : undefined;
+    const image = req.file
+      ? (req.file.path.startsWith('http') ? req.file.path : `/uploads/${req.file.filename}`)
+      : undefined;
 
     const updateData: any = {};
     if (name !== undefined) updateData.name = name;
