@@ -1,21 +1,14 @@
-import { PrismaClient } from '@prisma/client';
-import { PrismaLibSql } from '@prisma/adapter-libsql';
-import * as dotenv from 'dotenv';
+import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
+import prisma from '../src/config/db';
 
 dotenv.config();
-
-const adapter = new PrismaLibSql({
-  url: process.env.DATABASE_URL || 'file:./dev.db',
-});
-
-const prisma = new PrismaClient({ adapter });
 
 async function main() {
   console.log('Seeding database...');
 
   // Admin user
-  const hashedPassword = await bcrypt.hash('admin123', 10);
+  const hashedPassword = await bcrypt.hash('Admin123!Drugstore@BarbaN3GRA', 10);
   const admin = await prisma.user.upsert({
     where: { email: 'admin@barbanegra.com' },
     update: {},
