@@ -23,3 +23,25 @@ export const login = async (req: Request, res: Response) => {
     sendError(res, message, 400);
   }
 };
+
+export const forgotPassword = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    await authService.forgotPasswordService(email);
+    sendSuccess(res, null, 'Email de recuperacion enviado si el usuario existe');
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Error al procesar solicitud';
+    sendError(res, message, 400);
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  try {
+    const { token, password } = req.body;
+    await authService.resetPasswordService(token, password);
+    sendSuccess(res, null, 'Contraseña actualizada con exito');
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Error al resetear contraseña';
+    sendError(res, message, 400);
+  }
+};

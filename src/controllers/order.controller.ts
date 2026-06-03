@@ -37,8 +37,17 @@ export const getMyOrders = async (req: Request, res: Response) => {
 
 export const getAllOrders = async (req: Request, res: Response) => {
   try {
-    const orders = await orderService.getAllOrdersService();
-    sendSuccess(res, orders);
+    const { page, limit, status, dateFrom, dateTo, search, deliveryType } = req.query;
+    const result = await orderService.getAllOrdersService({
+      page: page ? parseInt(page as string) : 1,
+      limit: limit ? parseInt(limit as string) : 20,
+      status: status as string,
+      dateFrom: dateFrom as string,
+      dateTo: dateTo as string,
+      search: search as string,
+      deliveryType: deliveryType as string,
+    });
+    sendSuccess(res, result);
   } catch (error: unknown) {
     sendError(res, 'Error fetching orders', 500);
   }

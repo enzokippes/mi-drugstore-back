@@ -78,13 +78,15 @@ async function main() {
   }
   console.log('  ✅ Products created');
 
-  // Delivery Zones
+  // Delivery Zones (ordered by distance from store: closest to farthest)
+  // Centro > San Carlos/Costanera > La Bianca > Villa Zorraquin
+  await prisma.deliveryZone.deleteMany({});
   const zonesData = [
     { name: 'Centro', basePrice: 1500, surcharge: 0, maxDistanceKm: 3 },
-    { name: 'Norte', basePrice: 2000, surcharge: 500, maxDistanceKm: 5 },
-    { name: 'Sur', basePrice: 2000, surcharge: 500, maxDistanceKm: 5 },
-    { name: 'Este', basePrice: 2500, surcharge: 1000, maxDistanceKm: 7 },
-    { name: 'Oeste', basePrice: 2500, surcharge: 1000, maxDistanceKm: 7 },
+    { name: 'San Carlos', basePrice: 2000, surcharge: 500, maxDistanceKm: 6 },
+    { name: 'Costanera', basePrice: 2000, surcharge: 500, maxDistanceKm: 6 },
+    { name: 'La Bianca', basePrice: 2500, surcharge: 1000, maxDistanceKm: 8 },
+    { name: 'Villa Zorraquin', basePrice: 3000, surcharge: 1500, maxDistanceKm: 10 },
   ];
 
   for (const zone of zonesData) {

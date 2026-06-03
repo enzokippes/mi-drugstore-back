@@ -113,27 +113,64 @@ export const getUserOrdersService = async (userId: string) => {
   });
 };
 
-export const getAllOrdersService = async () => {
-  return await prisma.order.findMany({
-    include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
+export const getAllOrdersService = async (params: {
+  page?: number;
+  limit?: number;
+  status?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  search?: string;
+  deliveryType?: string;
+}) => {
+  const { page = 1, limit = 20, status, dateFrom, dateTo, search, deliveryType } = params;
+  const skip = (page - 1) * limit;
+
+  const where: any = {};
+
+  if (status && status !== 'ALL') {
+    where.status = status;
+  }
+
+  if (deliveryType && deliveryType !== 'ALL') {
+    where.deliveryType = deliveryType;
+  }
+
+  if (dateFrom || dateTo) {
+    where.createdAt = {};
+    if (dateFrom) where.createdAt.gte = new Date(dateFrom);
+    if (dateTo) where.createdAt.lte = new Date(dateTo + 'T23:59:59.999');
+  }
+
+  if (search) {
+    where.OR = [
+      { id: { contains: search } },
+      { user: { name: { contains: search, mode: 'insensitive' } } },
+      { user: { email: { contains: search, mode: 'insensitive' } } },
+      { address: { contains: search, mode: 'insensitive' } },
+      { phone: { contains: search } },
+    ];
+  }
+
+  const [items, total] = await Promise.all([
+    prisma.order.findMany({
+      where,
+      include: {
+        user: {
+          select: { id: true, name: true, email: true },
         },
-      },
-      items: {
-        include: {
-          product: true,
+        items: {
+          include: { product: true },
         },
+        deliveryZone: true,
       },
-      deliveryZone: true,
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+    }),
+    prisma.order.count({ where }),
+  ]);
+
+  return { items, total, page, limit };
 };
 
 export const updateOrderStatusService = async (orderId: string, status: string) => {
@@ -156,6 +193,20 @@ export const updateOrderStatusService = async (orderId: string, status: string) 
   if (status === 'CONFIRMED' && order.user) {
     const itemsTotal = order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     await awardPointsForOrderService(order.user.id, itemsTotal, order.id).catch(() => {});
+  }
+
+  if (status === 'CANCELLED') {
+    for (const item of order.items) {
+      if (item.productId) {
+        const product = await prisma.product.findUnique({ where: { id: item.productId } });
+        if (product && !product.unlimitedStock) {
+          await prisma.product.update({
+            where: { id: item.productId },
+            data: { stock: { increment: item.quantity } },
+          });
+        }
+      }
+    }
   }
 
   if (order.user?.email && ['CONFIRMED', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED'].includes(status)) {

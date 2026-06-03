@@ -3,6 +3,10 @@
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
+const dbUrl = process.env.TURSO_DATABASE_URL
+  ? process.env.TURSO_DATABASE_URL
+  : process.env.DATABASE_URL || "file:./dev.db";
+
 export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
@@ -10,6 +14,6 @@ export default defineConfig({
     seed: "ts-node prisma/seed.ts",
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
+    url: dbUrl,
   },
 });

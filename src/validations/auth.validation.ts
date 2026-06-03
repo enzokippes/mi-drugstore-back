@@ -15,3 +15,17 @@ export const loginSchema = z.object({
   email: z.string().email('Email invalido').trim().toLowerCase(),
   password: z.string().min(1, 'La contraseña es requerida'),
 });
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().email('Email invalido').trim().toLowerCase(),
+});
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1, 'Token es requerido'),
+  password: z
+    .string()
+    .min(8, 'La contraseña debe tener al menos 8 caracteres')
+    .max(100, 'La contraseña no puede superar 100 caracteres')
+    .regex(/[A-Z]/, 'La contraseña debe tener al menos una mayuscula')
+    .regex(/[0-9]/, 'La contraseña debe tener al menos un numero'),
+});

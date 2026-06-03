@@ -13,6 +13,8 @@ model User {
   name          String
   phone         String?
   role          String         @default("USER")
+  resetToken    String?
+  resetTokenExpiry DateTime?
   orders        Order[]
   loyaltyPoints LoyaltyPoint[]
   addresses     Address[]

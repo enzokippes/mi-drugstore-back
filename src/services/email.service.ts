@@ -220,3 +220,49 @@ export const sendStatusChangeEmail = async (to: string, orderId: string, status:
     console.error('Error sending status change email:', error);
   }
 };
+
+export const sendPasswordResetEmail = async (to: string, token: string, userName: string) => {
+  const resend = getResend();
+  if (!resend) {
+    console.log('RESEND_API_KEY not configured, skipping password reset email');
+    return;
+  }
+
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  const resetLink = `${frontendUrl}/reset-password?token=${token}`;
+
+  try {
+    await resend.emails.send({
+      from: 'Barba Negra <onboarding@resend.dev>',
+      to,
+      subject: 'Restablecer contraseña - Barba Negra Drugstore',
+      html: `
+        <div style="font-family: system-ui, sans-serif; background-color: #030712; color: #fff; padding: 40px 20px;">
+          <div style="max-width: 500px; margin: 0 auto; background-color: #111827; border-radius: 16px; padding: 32px; border: 1px solid #1f2937;">
+            <div style="text-align: center; margin-bottom: 24px;">
+              <h1 style="color: #fbbf24; margin: 0; font-size: 24px;">Barba Negra Drugstore</h1>
+              <p style="color: #9ca3af; margin: 8px 0 0;">Solicitud de recuperacion de contraseña</p>
+            </div>
+            <div style="text-align: center; margin-bottom: 24px;">
+              <div style="font-size: 48px; margin-bottom: 16px;">🔑</div>
+              <h2 style="color: #e5e7eb; margin: 0 0 8px; font-size: 20px;">Hola ${userName},</h2>
+              <p style="color: #9ca3af; margin: 0; font-size: 14px;">Recibimos una solicitud para restablecer tu contraseña. Hacé click en el boton de abajo para crear una nueva contraseña.</p>
+            </div>
+            <div style="text-align: center; margin-bottom: 24px;">
+              <a href="${resetLink}" style="display: inline-block; background-color: #fbbf24; color: #030712; font-weight: bold; padding: 14px 28px; border-radius: 12px; text-decoration: none; font-size: 16px;">Restablecer contraseña</a>
+            </div>
+            <div style="background-color: #1f2937; border-radius: 12px; padding: 16px; text-align: center;">
+              <p style="color: #9ca3af; font-size: 12px; margin: 0;">Este link expira en 1 hora.</p>
+              <p style="color: #6b7280; font-size: 11px; margin: 8px 0 0;">Si no pediste este email, ignoralo.</p>
+            </div>
+            <div style="margin-top: 32px; text-align: center; color: #6b7280; font-size: 12px;">
+              <p>H. Primo ESQ Balcarce, Concordia, Entre Rios</p>
+            </div>
+          </div>
+        </div>
+      `,
+    });
+  } catch (error) {
+    console.error('Error sending password reset email:', error);
+  }
+};

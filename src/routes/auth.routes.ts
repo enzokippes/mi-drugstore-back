@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { login, register } from '../controllers/auth.controller';
-import { registerSchema, loginSchema } from '../validations/auth.validation';
+import { login, register, forgotPassword, resetPassword } from '../controllers/auth.controller';
+import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema } from '../validations/auth.validation';
 import { validateZod } from '../middlewares/validate';
 
 const router = Router();
@@ -66,5 +66,9 @@ router.post('/register', validateZod(registerSchema), register);
  *         description: Invalid credentials
  */
 router.post('/login', validateZod(loginSchema), login);
+
+router.post('/forgot-password', validateZod(forgotPasswordSchema), forgotPassword);
+
+router.post('/reset-password', validateZod(resetPasswordSchema), resetPassword);
 
 export default router;
