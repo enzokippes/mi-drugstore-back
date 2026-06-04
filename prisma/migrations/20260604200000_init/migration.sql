@@ -24,6 +24,38 @@ CREATE TABLE "Category" (
 );
 
 -- CreateTable
+CREATE TABLE "Setting" (
+    "key" TEXT NOT NULL PRIMARY KEY,
+    "value" TEXT NOT NULL,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- CreateTable
+CREATE TABLE "DeliveryZone" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "name" TEXT NOT NULL,
+    "basePrice" DOUBLE PRECISION NOT NULL,
+    "surcharge" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "maxDistanceKm" DOUBLE PRECISION,
+    "active" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- CreateTable
+CREATE TABLE "Promotion" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "title" TEXT NOT NULL,
+    "description" TEXT NOT NULL,
+    "image" TEXT,
+    "price" DOUBLE PRECISION NOT NULL,
+    "originalPrice" DOUBLE PRECISION,
+    "active" BOOLEAN NOT NULL DEFAULT true,
+    "startDate" TIMESTAMP,
+    "endDate" TIMESTAMP,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- CreateTable
 CREATE TABLE "Product" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
@@ -68,38 +100,6 @@ CREATE TABLE "OrderItem" (
     "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "OrderItem_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "Order" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT "OrderItem_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product" ("id") ON DELETE SET NULL ON UPDATE CASCADE
-);
-
--- CreateTable
-CREATE TABLE "Setting" (
-    "key" TEXT NOT NULL PRIMARY KEY,
-    "value" TEXT NOT NULL,
-    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
--- CreateTable
-CREATE TABLE "Promotion" (
-    "id" TEXT NOT NULL PRIMARY KEY,
-    "title" TEXT NOT NULL,
-    "description" TEXT NOT NULL,
-    "image" TEXT,
-    "price" DOUBLE PRECISION NOT NULL,
-    "originalPrice" DOUBLE PRECISION,
-    "active" BOOLEAN NOT NULL DEFAULT true,
-    "startDate" TIMESTAMP,
-    "endDate" TIMESTAMP,
-    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
--- CreateTable
-CREATE TABLE "DeliveryZone" (
-    "id" TEXT NOT NULL PRIMARY KEY,
-    "name" TEXT NOT NULL,
-    "basePrice" DOUBLE PRECISION NOT NULL,
-    "surcharge" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "maxDistanceKm" DOUBLE PRECISION,
-    "active" BOOLEAN NOT NULL DEFAULT true,
-    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- CreateTable
