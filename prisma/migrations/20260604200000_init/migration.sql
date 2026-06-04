@@ -24,7 +24,7 @@ CREATE TABLE "Category" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Category_name_key" ON "Category"("name");
+CREATE UNIQUE INDEX IF NOT EXISTS "Category_name_key" ON "Category"("name");
 
 -- CreateTable
 CREATE TABLE "Setting" (
@@ -45,7 +45,7 @@ CREATE TABLE "DeliveryZone" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "DeliveryZone_name_key" ON "DeliveryZone"("name");
+CREATE UNIQUE INDEX IF NOT EXISTS "DeliveryZone_name_key" ON "DeliveryZone"("name");
 
 -- CreateTable
 CREATE TABLE "Promotion" (
@@ -78,7 +78,7 @@ CREATE TABLE "Product" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Product_name_key" ON "Product"("name");
+CREATE UNIQUE INDEX IF NOT EXISTS "Product_name_key" ON "Product"("name");
 
 -- CreateTable
 CREATE TABLE "Order" (
@@ -136,7 +136,7 @@ CREATE TABLE "PointReward" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "PointReward_name_key" ON "PointReward"("name");
+CREATE UNIQUE INDEX IF NOT EXISTS "PointReward_name_key" ON "PointReward"("name");
 
 -- CreateTable
 CREATE TABLE "Address" (
@@ -154,16 +154,16 @@ CREATE TABLE "Address" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+CREATE UNIQUE INDEX IF NOT EXISTS "User_email_key" ON "User"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Category_name_key" ON "Category"("name");
+CREATE UNIQUE INDEX IF NOT EXISTS "Category_name_key" ON "Category"("name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Product_name_key" ON "Product"("name");
+CREATE UNIQUE INDEX IF NOT EXISTS "Product_name_key" ON "Product"("name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "DeliveryZone_name_key" ON "DeliveryZone"("name");
+CREATE UNIQUE INDEX IF NOT EXISTS "DeliveryZone_name_key" ON "DeliveryZone"("name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "PointReward_name_key" ON "PointReward"("name");
+CREATE UNIQUE INDEX IF NOT EXISTS "PointReward_name_key" ON "PointReward"("name");
