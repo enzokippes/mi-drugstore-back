@@ -1,13 +1,11 @@
 import { PrismaClient } from '@prisma/client';
-import { PrismaLibSql } from '@prisma/adapter-libsql';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 
-const isProduction = !!process.env.TURSO_DATABASE_URL;
+const connectionString = process.env.DATABASE_URL || 'postgresql://user:password@localhost:5432/barbanegra';
 
-const adapter = new PrismaLibSql({
-  url: isProduction ? process.env.TURSO_DATABASE_URL! : (process.env.DATABASE_URL || "file:./dev.db"),
-  authToken: isProduction ? process.env.TURSO_AUTH_TOKEN : undefined,
-});
-
+const pool = new Pool({ connectionString });
+const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 export default prisma;

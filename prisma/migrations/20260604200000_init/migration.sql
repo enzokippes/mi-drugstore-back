@@ -1,3 +1,6 @@
+-- Migration: Init
+-- Created: 2026-06-04
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL PRIMARY KEY,
@@ -7,7 +10,8 @@ CREATE TABLE "User" (
     "phone" TEXT,
     "role" TEXT NOT NULL DEFAULT 'USER',
     "resetToken" TEXT,
-    "resetTokenExpiry" DATETIME
+    "resetTokenExpiry" TIMESTAMP,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- CreateTable
@@ -15,6 +19,7 @@ CREATE TABLE "Category" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
     "parentId" TEXT,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "Category_parentId_fkey" FOREIGN KEY ("parentId") REFERENCES "Category" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
 
@@ -23,28 +28,29 @@ CREATE TABLE "Product" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
     "description" TEXT,
-    "price" REAL NOT NULL,
+    "price" DOUBLE PRECISION NOT NULL,
     "stock" INTEGER NOT NULL DEFAULT 0,
     "unlimitedStock" BOOLEAN NOT NULL DEFAULT false,
     "image" TEXT,
     "isCombo" BOOLEAN NOT NULL DEFAULT false,
     "isFeatured" BOOLEAN NOT NULL DEFAULT false,
     "categoryId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "Product_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "Order" (
     "id" TEXT NOT NULL PRIMARY KEY,
-    "total" REAL NOT NULL,
+    "total" DOUBLE PRECISION NOT NULL,
     "deliveryType" TEXT NOT NULL DEFAULT 'PICKUP',
-    "deliveryCost" REAL NOT NULL DEFAULT 0,
+    "deliveryCost" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "address" TEXT,
     "phone" TEXT,
     "notes" TEXT,
     "deliveryTime" TEXT,
     "status" TEXT NOT NULL DEFAULT 'PENDING',
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "userId" TEXT NOT NULL,
     "deliveryZoneId" TEXT,
     CONSTRAINT "Order_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
@@ -55,10 +61,11 @@ CREATE TABLE "Order" (
 CREATE TABLE "OrderItem" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "quantity" INTEGER NOT NULL,
-    "price" REAL NOT NULL,
+    "price" DOUBLE PRECISION NOT NULL,
     "productName" TEXT,
     "orderId" TEXT NOT NULL,
     "productId" TEXT,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "OrderItem_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "Order" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT "OrderItem_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
@@ -66,7 +73,8 @@ CREATE TABLE "OrderItem" (
 -- CreateTable
 CREATE TABLE "Setting" (
     "key" TEXT NOT NULL PRIMARY KEY,
-    "value" TEXT NOT NULL
+    "value" TEXT NOT NULL,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- CreateTable
@@ -75,22 +83,23 @@ CREATE TABLE "Promotion" (
     "title" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "image" TEXT,
-    "price" REAL NOT NULL,
-    "originalPrice" REAL,
+    "price" DOUBLE PRECISION NOT NULL,
+    "originalPrice" DOUBLE PRECISION,
     "active" BOOLEAN NOT NULL DEFAULT true,
-    "startDate" DATETIME,
-    "endDate" DATETIME,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    "startDate" TIMESTAMP,
+    "endDate" TIMESTAMP,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- CreateTable
 CREATE TABLE "DeliveryZone" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
-    "basePrice" REAL NOT NULL,
-    "surcharge" REAL NOT NULL DEFAULT 0,
-    "maxDistanceKm" REAL,
-    "active" BOOLEAN NOT NULL DEFAULT true
+    "basePrice" DOUBLE PRECISION NOT NULL,
+    "surcharge" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "maxDistanceKm" DOUBLE PRECISION,
+    "active" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- CreateTable
@@ -100,7 +109,7 @@ CREATE TABLE "LoyaltyPoint" (
     "points" INTEGER NOT NULL,
     "reason" TEXT NOT NULL,
     "orderId" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "LoyaltyPoint_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
@@ -113,6 +122,7 @@ CREATE TABLE "PointReward" (
     "productId" TEXT,
     "image" TEXT,
     "active" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "PointReward_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
 
@@ -126,6 +136,7 @@ CREATE TABLE "Address" (
     "notes" TEXT,
     "zoneId" TEXT,
     "isDefault" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "Address_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT "Address_zoneId_fkey" FOREIGN KEY ("zoneId") REFERENCES "DeliveryZone" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
