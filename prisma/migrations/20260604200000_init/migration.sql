@@ -23,6 +23,9 @@ CREATE TABLE "Category" (
     CONSTRAINT "Category_parentId_fkey" FOREIGN KEY ("parentId") REFERENCES "Category" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
 
+-- CreateIndex
+CREATE UNIQUE INDEX "Category_name_key" ON "Category"("name");
+
 -- CreateTable
 CREATE TABLE "Setting" (
     "key" TEXT NOT NULL PRIMARY KEY,
@@ -40,6 +43,9 @@ CREATE TABLE "DeliveryZone" (
     "active" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "DeliveryZone_name_key" ON "DeliveryZone"("name");
 
 -- CreateTable
 CREATE TABLE "Promotion" (
@@ -70,6 +76,9 @@ CREATE TABLE "Product" (
     "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "Product_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Product_name_key" ON "Product"("name");
 
 -- CreateTable
 CREATE TABLE "Order" (
@@ -126,6 +135,9 @@ CREATE TABLE "PointReward" (
     CONSTRAINT "PointReward_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
 
+-- CreateIndex
+CREATE UNIQUE INDEX "PointReward_name_key" ON "PointReward"("name");
+
 -- CreateTable
 CREATE TABLE "Address" (
     "id" TEXT NOT NULL PRIMARY KEY,
@@ -143,3 +155,15 @@ CREATE TABLE "Address" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Category_name_key" ON "Category"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Product_name_key" ON "Product"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "DeliveryZone_name_key" ON "DeliveryZone"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "PointReward_name_key" ON "PointReward"("name");

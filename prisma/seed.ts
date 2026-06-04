@@ -5,9 +5,9 @@ import prisma from '../src/config/db';
 dotenv.config();
 
 async function main() {
-  console.log('Seeding database...');
+  console.log('Seeding database (idempotent)...');
 
-  // Admin user
+  // Admin user - upsert ensures it only creates if doesn't exist
   const hashedPassword = await bcrypt.hash('Admin123!Drugstore@BarbaN3GRA', 10);
   const admin = await prisma.user.upsert({
     where: { email: 'admin@barbanegra.com' },
@@ -21,7 +21,7 @@ async function main() {
   });
   console.log(`  ✅ Admin: ${admin.email} (role: ${admin.role})`);
 
-  // Settings
+  // Settings - upsert is already safe
   await prisma.setting.upsert({
     where: { key: 'trackInventory' },
     update: {},
@@ -29,7 +29,7 @@ async function main() {
   });
   console.log('  ✅ Settings created');
 
-  // Categories
+  // Categories - use upsert to be idempotent
   const categoriesData = [
     { name: 'Bebidas' },
     { name: 'Snacks' },
@@ -39,9 +39,13 @@ async function main() {
   ];
 
   for (const cat of categoriesData) {
-    await prisma.category.create({ data: cat });
+    await prisma.category.upsert({
+      where: { name: cat.name },
+      update: {},
+      create: cat,
+    });
   }
-  console.log('  ✅ Categories created');
+  console.log('  ✅ Categories (upserted)');
 
   const dbCategories = await prisma.category.findMany();
 
@@ -50,37 +54,48 @@ async function main() {
   const alcohol = dbCategories.find(c => c.name === 'Alcohol')?.id;
   const hielo = dbCategories.find(c => c.name === 'Hielo')?.id;
 
+  // Products - use upsert to be idempotent (preserves user modifications)
   if (bebidas) {
-    await prisma.product.create({
-      data: { name: 'Coca Cola 2L', price: 2500, stock: 50, categoryId: bebidas },
+    await prisma.product.upsert({
+      where: { name: 'Coca Cola 2L' },
+      update: {},
+      create: { name: 'Coca Cola 2L', price: 2500, stock: 50, categoryId: bebidas },
     });
-    await prisma.product.create({
-      data: { name: 'Combo Fernet + Coca', price: 6000, stock: 20, categoryId: bebidas, isCombo: true },
+    await prisma.product.upsert({
+      where: { name: 'Combo Fernet + Coca' },
+      update: {},
+      create: { name: 'Combo Fernet + Coca', price: 6000, stock: 20, categoryId: bebidas, isCombo: true },
     });
   }
   if (snacks) {
-    await prisma.product.create({
-      data: { name: 'Papas Lays Clásicas', price: 1500, stock: 30, categoryId: snacks },
+    await prisma.product.upsert({
+      where: { name: 'Papas Lays Clásicas' },
+      update: {},
+      create: { name: 'Papas Lays Clásicas', price: 1500, stock: 30, categoryId: snacks },
     });
-    await prisma.product.create({
-      data: { name: 'Combo Picada XL', price: 4500, stock: 15, categoryId: snacks, isCombo: true },
+    await prisma.product.upsert({
+      where: { name: 'Combo Picada XL' },
+      update: {},
+      create: { name: 'Combo Picada XL', price: 4500, stock: 15, categoryId: snacks, isCombo: true },
     });
   }
   if (alcohol) {
-    await prisma.product.create({
-      data: { name: 'Cerveza Quilmes 1L', price: 1800, stock: 100, categoryId: alcohol },
+    await prisma.product.upsert({
+      where: { name: 'Cerveza Quilmes 1L' },
+      update: {},
+      create: { name: 'Cerveza Quilmes 1L', price: 1800, stock: 100, categoryId: alcohol },
     });
   }
   if (hielo) {
-    await prisma.product.create({
-      data: { name: 'Bolsa de Hielo 2.5kg', price: 800, stock: 0, unlimitedStock: true, categoryId: hielo },
+    await prisma.product.upsert({
+      where: { name: 'Bolsa de Hielo 2.5kg' },
+      update: {},
+      create: { name: 'Bolsa de Hielo 2.5kg', price: 800, stock: 0, unlimitedStock: true, categoryId: hielo },
     });
   }
-  console.log('  ✅ Products created');
+  console.log('  ✅ Products (upserted)');
 
-  // Delivery Zones (ordered by distance from store: closest to farthest)
-  // Centro > San Carlos/Costanera > La Bianca > Villa Zorraquin
-  await prisma.deliveryZone.deleteMany({});
+  // Delivery Zones - use upsert (NO deleteMany anymore)
   const zonesData = [
     { name: 'Centro', basePrice: 1500, surcharge: 0, maxDistanceKm: 3 },
     { name: 'San Carlos', basePrice: 2000, surcharge: 500, maxDistanceKm: 6 },
@@ -90,18 +105,21 @@ async function main() {
   ];
 
   for (const zone of zonesData) {
-    await prisma.deliveryZone.create({ data: zone });
+    await prisma.deliveryZone.upsert({
+      where: { name: zone.name },
+      update: {},
+      create: zone,
+    });
   }
-  console.log('  ✅ Delivery zones created');
+  console.log('  ✅ Delivery zones (upserted, no delete)');
 
-  // Settings for loyalty points
+  // Settings for loyalty points - upsert is already safe
   await prisma.setting.upsert({
     where: { key: 'pointsPerPeso' },
     update: {},
     create: { key: 'pointsPerPeso', value: '0.01' },
   });
 
-  // Settings for store and delivery hours
   await prisma.setting.upsert({
     where: { key: 'storeHours' },
     update: {},
@@ -126,9 +144,9 @@ async function main() {
     },
   });
 
-  console.log('  ✅ Loyalty and schedule settings created');
+  console.log('  ✅ Loyalty and schedule settings (upserted)');
 
-  // Point Rewards
+  // Point Rewards - use upsert to be idempotent
   const dbBebidas = await prisma.category.findFirst({ where: { name: 'Bebidas' } });
   const cocaProduct = dbBebidas ? await prisma.product.findFirst({ where: { name: 'Coca Cola 2L' } }) : null;
 
@@ -152,11 +170,15 @@ async function main() {
   ];
 
   for (const reward of rewardsData) {
-    await prisma.pointReward.create({ data: reward });
+    await prisma.pointReward.upsert({
+      where: { name: reward.name },
+      update: {},
+      create: reward,
+    });
   }
-  console.log('  ✅ Point rewards created');
+  console.log('  ✅ Point rewards (upserted)');
 
-  console.log('Database seeded successfully!');
+  console.log('Database seeded successfully (idempotent)!');
 }
 
 main()

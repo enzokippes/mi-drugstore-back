@@ -22,7 +22,7 @@ model User {
 
 model Category {
   id         String     @id @default(uuid())
-  name       String
+  name       String     @unique
   parentId   String?
   parent     Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
   children   Category[] @relation("CategoryHierarchy")
@@ -31,7 +31,7 @@ model Category {
 
 model Product {
   id             String       @id @default(uuid())
-  name           String
+  name           String       @unique
   description    String?
   price          Float
   stock          Int          @default(0)
@@ -94,7 +94,7 @@ model Promotion {
 
 model DeliveryZone {
   id            String    @id @default(uuid())
-  name          String
+  name          String    @unique
   basePrice     Float
   surcharge     Float     @default(0)
   maxDistanceKm Float?
@@ -115,7 +115,7 @@ model LoyaltyPoint {
 
 model PointReward {
   id          String   @id @default(uuid())
-  name        String
+  name        String   @unique
   description String?
   pointsCost  Int
   productId   String?
