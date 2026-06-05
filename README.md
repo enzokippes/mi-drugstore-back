@@ -1,6 +1,6 @@
 # Barba Negra Drugstore — Backend API
 
-A REST API for an online pharmacy/drugstore featuring JWT authentication, role-based access control, Zod validation, MercadoPago payment integration, Resend email services, Cloudinary image hosting, and a loyalty points system.
+A REST API for an online pharmacy/drugstore featuring JWT authentication, role-based access control, Zod validation, Resend email services, Cloudinary image hosting, and a loyalty points system.
 
 ## Tech Stack
 
@@ -15,7 +15,6 @@ A REST API for an online pharmacy/drugstore featuring JWT authentication, role-b
 | bcryptjs | Password hashing |
 | JWT | Stateless authentication |
 | Resend | Transactional emails |
-| MercadoPago SDK | Payment gateway |
 | Cloudinary | Image hosting and management |
 | Helmet + Rate Limit | HTTP security |
 | Swagger | API documentation |
@@ -25,19 +24,19 @@ A REST API for an online pharmacy/drugstore featuring JWT authentication, role-b
 ```
 src/
 ├── config/
-│   └── db.ts                  # Prisma client with @prisma/adapter-pg
+│   ├── cloudinary.ts           # Cloudinary configuration
+│   └── db.ts                   # Prisma client with @prisma/adapter-pg
 ├── controllers/
 │   ├── address.controller.ts   # User address management
-│   ├── adminDashboard.controller.ts # Admin dashboard stats
 │   ├── auth.controller.ts      # Login, register, password reset
-│   ├── category.controller.ts   # Category CRUD
-│   ├── deliveryZone.controller.ts # Delivery zones CRUD
+│   ├── category.controller.ts  # Category CRUD
+│   ├── delivery-zone.controller.ts # Delivery zones CRUD
 │   ├── loyalty.controller.ts    # Points and rewards
 │   ├── order.controller.ts      # Order management
-│   ├── payment.controller.ts    # MercadoPago preferences + webhook
 │   ├── product.controller.ts     # Product CRUD
 │   ├── promotion.controller.ts   # Promotion CRUD
-│   └── settings.controller.ts    # Global configuration
+│   ├── settings.controller.ts    # Global configuration
+│   └── stats.controller.ts       # Admin dashboard statistics
 ├── middleware/
 │   ├── adminMiddleware.ts     # ADMIN role guard
 │   ├── authMiddleware.ts       # JWT verification
@@ -45,30 +44,28 @@ src/
 │   └── upload.ts               # Multer configuration (legacy - use Cloudinary)
 ├── routes/
 │   ├── address.routes.ts       # /api/addresses
-│   ├── admin.routes.ts         # Admin dashboard stats
 │   ├── auth.routes.ts           # /api/auth
 │   ├── category.routes.ts       # /api/categories
-│   ├── delivery-zone.routes.ts   # /api/delivery-zones
+│   ├── delivery-zone.routes.ts  # /api/delivery-zones
 │   ├── loyalty.routes.ts        # /api/loyalty
 │   ├── order.routes.ts          # /api/orders
-│   ├── payment.routes.ts        # /api/payments
 │   ├── popular.routes.ts        # /api/products/popular
 │   ├── product.routes.ts        # /api/products
 │   ├── promotion.routes.ts      # /api/promotions
-│   └── settings.routes.ts       # /api/settings
+│   ├── settings.routes.ts       # /api/settings
+│   └── stats.routes.ts          # /api/admin/stats
 ├── services/
 │   ├── address.service.ts      # Address management logic
 │   ├── auth.service.ts          # Authentication logic
-│   ├── category.service.ts       # Category logic
-│   ├── cloudinary.service.ts     # Cloudinary upload/delete
-│   ├── deliveryZone.service.ts   # Delivery zones logic
-│   ├── email.service.ts          # Resend email templates
-│   ├── loyalty.service.ts        # Points and rewards logic
-│   ├── order.service.ts          # Order logic + stock management
-│   ├── payment.service.ts        # MercadoPago integration
+│   ├── category.service.ts      # Category logic
+│   ├── delivery-zone.service.ts # Delivery zones logic
+│   ├── email.service.ts         # Resend email templates
+│   ├── loyalty.service.ts       # Points and rewards logic
+│   ├── order.service.ts         # Order logic + stock management
 │   ├── product.service.ts        # Product logic
-│   ├── promotion.service.ts      # Promotion logic
-│   └── settings.service.ts       # Settings logic
+│   ├── promotion.service.ts     # Promotion logic
+│   ├── settings.service.ts      # Settings logic
+│   └── stats.service.ts         # Statistics logic
 ├── types/
 │   └── index.d.ts               # Express types + AuthPayload
 ├── utils/
@@ -76,20 +73,20 @@ src/
 ├── validations/
 │   ├── address.validation.ts   # Address Zod schemas
 │   ├── auth.validation.ts       # Auth Zod schemas
-│   ├── category.validation.ts    # Category Zod schemas
-│   ├── deliveryZone.validation.ts # Delivery zone Zod schemas
-│   ├── loyalty.validation.ts     # Points Zod schemas
-│   ├── order.validation.ts        # Order Zod schemas
-│   ├── product.validation.ts      # Product Zod schemas
-│   ├── promotion.validation.ts    # Promotion Zod schemas
-│   └── settings.validation.ts     # Settings Zod schemas
+│   ├── category.validation.ts   # Category Zod schemas
+│   ├── delivery-zone.validation.ts # Delivery zone Zod schemas
+│   ├── loyalty.validation.ts    # Points Zod schemas
+│   ├── order.validation.ts      # Order Zod schemas
+│   ├── product.validation.ts    # Product Zod schemas
+│   ├── promotion.validation.ts   # Promotion Zod schemas
+│   └── settings.validation.ts   # Settings Zod schemas
 ├── server.ts                    # Application entry point
 prisma/
 ├── schema.prisma                # Database schema
 ├── seed.ts                      # Idempotent seed data
-└── migrations/                   # Database migrations
+└── migrations/                  # Database migrations
     └── 20260604200000_init/
-        └── migration.sql         # Initial migration (PostgreSQL)
+        └── migration.sql        # Initial migration (PostgreSQL)
 ```
 
 ## Environment Variables
@@ -115,9 +112,6 @@ ADMIN_EMAIL="admin@example.com"
 # Cloudinary - https://cloudinary.com/console
 # Format: cloudinary://api_key:api_secret@cloud_name
 CLOUDINARY_URL="cloudinary://api_key:api_secret@cloud_name"
-
-# MercadoPago - https://www.mercadopago.com.ar/developers/panel/credentials
-MP_ACCESS_TOKEN="APP_USR-xxxxx"
 ```
 
 ## Installation
@@ -161,7 +155,6 @@ Set these in your Render dashboard:
 | `RESEND_API_KEY` | Your Resend API key |
 | `ADMIN_EMAIL` | Your admin email |
 | `CLOUDINARY_URL` | Your Cloudinary URL |
-| `MP_ACCESS_TOKEN` | Your MercadoPago access token |
 
 ### Database Setup
 1. Create a PostgreSQL database on Render (Free tier)
@@ -209,7 +202,6 @@ Set these in your Render dashboard:
 | GET | `/my-orders` | User's order history | Yes | USER+ |
 | GET | `/` | List all orders | Yes | ADMIN |
 | PUT | `/:id/status` | Update order status | Yes | ADMIN |
-| PUT | `/:id/payment-status` | Update payment status | Yes | ADMIN |
 
 ### Promotions — `/api/promotions`
 
@@ -221,13 +213,6 @@ Set these in your Render dashboard:
 | POST | `/` | Create promotion | Yes | ADMIN |
 | PUT | `/:id` | Update promotion | Yes | ADMIN |
 | DELETE | `/:id` | Delete promotion | Yes | ADMIN |
-
-### Payments — `/api/payments`
-
-| Method | Endpoint | Description | Auth | Role |
-|--------|----------|-------------|------|------|
-| POST | `/create-preference` | Create MercadoPago preference | Yes | USER+ |
-| POST | `/webhook` | MercadoPago webhook handler | No | - |
 
 ### Settings — `/api/settings`
 
@@ -301,7 +286,7 @@ Tokens are obtained on login or registration and expire after 24 hours.
 
 | Role | Permissions |
 |------|-------------|
-| USER | Create orders, view own orders, manage own addresses, earn/redeem points, pay |
+| USER | Create orders, view own orders, manage own addresses, earn/redeem points |
 | ADMIN | All USER permissions + manage products, categories, promotions, delivery zones, rewards, settings, view all orders, update order statuses |
 
 ## Data Models
@@ -347,8 +332,6 @@ Order
   ├── notes
   ├── deliveryTime
   ├── status (PENDING | CONFIRMED | IN_TRANSIT | DELIVERED | CANCELLED)
-  ├── paymentStatus (PENDING | PAID | FAILED | REFUNDED)
-  ├── paymentId
   ├── userId → User
   ├── deliveryZoneId → DeliveryZone (nullable)
   ├── createdAt
