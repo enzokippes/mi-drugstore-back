@@ -57,60 +57,65 @@ export const getRewardByIdService = async (id: string) => {
 };
 
 export const redeemPointsService = async (userId: string, rewardId: string) => {
-  const reward = await prisma.pointReward.findUnique({
-    where: { id: rewardId },
-    include: { product: true },
-  });
-
-  if (!reward || !reward.active) {
-    throw new Error('Recompensa no disponible');
-  }
-
-  const userPoints = await getUserPointsService(userId);
-
-  if (userPoints.totalPoints < reward.pointsCost) {
-    throw new Error('Puntos insuficientes para canjear esta recompensa');
-  }
-
-  if (reward.product && reward.product.stock < 1 && !reward.product.unlimitedStock) {
-    throw new Error('Producto sin stock disponible');
-  }
-
-  await prisma.loyaltyPoint.create({
-    data: {
-      userId,
-      points: -reward.pointsCost,
-      reason: 'REDEMPTION',
-    },
-  });
-
-  if (reward.product && !reward.product.unlimitedStock) {
-    await prisma.product.update({
-      where: { id: reward.product.id },
-      data: { stock: { decrement: 1 } },
+  return await prisma.$transaction(async (tx) => {
+    const reward = await tx.pointReward.findUnique({
+      where: { id: rewardId },
+      include: { product: true },
     });
-  }
 
-  const order = await prisma.order.create({
-    data: {
-      userId,
-      total: 0,
-      deliveryType: 'PICKUP',
-      items: {
-        create: {
-          quantity: 1,
-          price: 0,
-          productId: reward.productId || null,
-          productName: reward.name,
+    if (!reward || !reward.active) {
+      throw new Error('Recompensa no disponible');
+    }
+
+    const points = await tx.loyaltyPoint.findMany({
+      where: { userId },
+      select: { points: true },
+    });
+    const totalPoints = points.reduce((sum, p) => sum + p.points, 0);
+
+    if (totalPoints < reward.pointsCost) {
+      throw new Error('Puntos insuficientes para canjear esta recompensa');
+    }
+
+    if (reward.product && reward.product.stock < 1 && !reward.product.unlimitedStock) {
+      throw new Error('Producto sin stock disponible');
+    }
+
+    const order = await tx.order.create({
+      data: {
+        userId,
+        total: 0,
+        deliveryType: 'PICKUP',
+        items: {
+          create: {
+            quantity: 1,
+            price: 0,
+            productId: reward.productId || null,
+            productName: reward.name,
+          },
         },
       },
-    },
-    include: {
-      items: true,
-    },
-  });
+      include: { items: true },
+    });
 
-  return { order, reward };
+    await tx.loyaltyPoint.create({
+      data: {
+        userId,
+        points: -reward.pointsCost,
+        reason: 'REDEMPTION',
+        orderId: order.id,
+      },
+    });
+
+    if (reward.product && !reward.product.unlimitedStock) {
+      await tx.product.update({
+        where: { id: reward.product.id },
+        data: { stock: { decrement: 1 } },
+      });
+    }
+
+    return { order, reward };
+  });
 };
 
 export const awardPointsService = async (userId: string, points: number, reason: string, orderId?: string) => {
