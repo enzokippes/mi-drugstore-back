@@ -78,6 +78,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/products', popularRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/orders', orderRoutes);
@@ -85,7 +86,6 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/promotions', promotionRoutes);
 app.use('/api/delivery-zones', deliveryZoneRoutes);
 app.use('/api/loyalty', loyaltyRoutes);
-app.use('/api/products', popularRoutes);
 app.use('/api/addresses', addressRoutes);
 app.use('/api/admin/stats', statsRoutes);
 
