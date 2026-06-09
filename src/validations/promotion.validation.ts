@@ -5,4 +5,5 @@ export const promotionSchema = z.object({
   description: z.string().min(1, 'La descripcion es requerida').max(500, 'La descripcion no puede superar 500 caracteres').trim(),
   price: z.coerce.number().positive('El precio debe ser mayor a 0'),
   originalPrice: z.coerce.number().positive('El precio original debe ser mayor a 0').optional(),
+  active: z.coerce.boolean().default(true),
 });
