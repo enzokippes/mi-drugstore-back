@@ -140,7 +140,7 @@ Swagger docs at `http://localhost:3000/api-docs`.
 
 ### Build Command
 ```bash
-npm install && npx prisma generate && npx prisma migrate deploy && npx prisma db seed && npm run build
+npm install && npx prisma generate && npx prisma migrate deploy && npm run build
 ```
 
 ### Environment Variables on Render
