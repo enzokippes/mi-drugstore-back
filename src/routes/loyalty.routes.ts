@@ -79,6 +79,8 @@ router.get('/rewards', loyaltyController.getRewards);
  */
 router.post('/redeem', authMiddleware, validateZod(redeemPointsSchema), loyaltyController.redeemPoints);
 
+router.post('/validate-reward', authMiddleware, validateZod(redeemPointsSchema), loyaltyController.validateRewardForCart);
+
 /**
  * @swagger
  * /api/loyalty/award:

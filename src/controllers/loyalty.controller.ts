@@ -42,6 +42,17 @@ export const redeemPoints = async (req: Request, res: Response) => {
   }
 };
 
+export const validateRewardForCart = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const { rewardId } = req.body;
+    const result = await loyaltyService.validateRewardForCartService(userId, rewardId);
+    sendSuccess(res, result);
+  } catch (error: any) {
+    sendError(res, error.message || 'Error validating reward', 400);
+  }
+};
+
 export const awardPoints = async (req: Request, res: Response) => {
   try {
     const { userId, points, reason } = req.body;

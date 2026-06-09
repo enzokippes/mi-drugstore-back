@@ -8,10 +8,16 @@ interface OrderItemInput {
   price: number;
 }
 
+interface RewardItemInput {
+  rewardId: string;
+  pointsCost: number;
+}
+
 interface CreateOrderInput {
   userId: string;
   total: number;
   items: OrderItemInput[];
+  rewardItems?: RewardItemInput[];
   deliveryType: string;
   deliveryZoneId?: string;
   address?: string;
@@ -21,79 +27,116 @@ interface CreateOrderInput {
 }
 
 export const createOrderService = async (data: CreateOrderInput) => {
-  const orderItems = [];
-  for (const item of data.items) {
-    if (item.productId.startsWith('promo-')) {
-      const promoId = item.productId.replace('promo-', '');
-      const promo = await prisma.promotion.findUnique({ where: { id: promoId } });
-      orderItems.push({
-        quantity: item.quantity,
-        price: item.price,
-        productName: promo ? promo.title : 'Promoción',
-        productId: null,
-      });
-    } else {
-      orderItems.push({
-        quantity: item.quantity,
-        price: item.price,
-        productId: item.productId,
-      });
-    }
-  }
-
-  let deliveryCost = 0;
-  if (data.deliveryType === 'DELIVERY' && data.deliveryZoneId) {
-    const zone = await prisma.deliveryZone.findUnique({ where: { id: data.deliveryZoneId } });
-    if (zone && zone.active) {
-      deliveryCost = zone.basePrice + zone.surcharge;
-    }
-  }
-
-  const order = await prisma.order.create({
-    data: {
-      userId: data.userId,
-      total: data.total + deliveryCost,
-      deliveryType: data.deliveryType,
-      deliveryCost,
-      deliveryZoneId: data.deliveryZoneId || null,
-      address: data.address || null,
-      phone: data.phone || null,
-      notes: data.notes || null,
-      deliveryTime: data.deliveryTime || null,
-      items: {
-        create: orderItems,
-      },
-    },
-    include: {
-      items: true,
-      deliveryZone: true,
-      user: {
-        select: {
-          name: true,
-          email: true,
-        },
-      },
-    },
-  });
-
-  for (const item of data.items) {
-    if (!item.productId.startsWith('promo-')) {
-      const product = await prisma.product.findUnique({ where: { id: item.productId } });
-      if (product && !product.unlimitedStock) {
-        await prisma.product.update({
-          where: { id: item.productId },
-          data: { stock: { decrement: item.quantity } },
+  return await prisma.$transaction(async (tx) => {
+    const orderItems = [];
+    for (const item of data.items) {
+      if (item.productId.startsWith('promo-')) {
+        const promoId = item.productId.replace('promo-', '');
+        const promo = await tx.promotion.findUnique({ where: { id: promoId } });
+        orderItems.push({
+          quantity: item.quantity,
+          price: item.price,
+          productName: promo ? promo.title : 'Promoción',
+          productId: null,
+        });
+      } else {
+        orderItems.push({
+          quantity: item.quantity,
+          price: item.price,
+          productId: item.productId,
         });
       }
     }
-  }
 
-  if (order.user?.email) {
-    sendOrderConfirmation(order.user.email, order).catch(() => {});
-  }
-  sendAdminOrderNotification(order).catch(() => {});
+    let deliveryCost = 0;
+    if (data.deliveryType === 'DELIVERY' && data.deliveryZoneId) {
+      const zone = await tx.deliveryZone.findUnique({ where: { id: data.deliveryZoneId } });
+      if (zone && zone.active) {
+        deliveryCost = zone.basePrice + zone.surcharge;
+      }
+    }
 
-  return order;
+    const order = await tx.order.create({
+      data: {
+        userId: data.userId,
+        total: data.total + deliveryCost,
+        deliveryType: data.deliveryType,
+        deliveryCost,
+        deliveryZoneId: data.deliveryZoneId || null,
+        address: data.address || null,
+        phone: data.phone || null,
+        notes: data.notes || null,
+        deliveryTime: data.deliveryTime || null,
+        items: {
+          create: orderItems,
+        },
+      },
+      include: {
+        items: true,
+        deliveryZone: true,
+        user: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    for (const item of data.items) {
+      if (!item.productId.startsWith('promo-')) {
+        const product = await tx.product.findUnique({ where: { id: item.productId } });
+        if (product && !product.unlimitedStock) {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { stock: { decrement: item.quantity } },
+          });
+        }
+      }
+    }
+
+    if (data.rewardItems && data.rewardItems.length > 0) {
+      const points = await tx.loyaltyPoint.findMany({
+        where: { userId: data.userId },
+        select: { points: true },
+      });
+      const totalPoints = points.reduce((sum, p) => sum + p.points, 0);
+      const totalRewardPoints = data.rewardItems.reduce((sum, r) => sum + r.pointsCost, 0);
+
+      if (totalPoints < totalRewardPoints) {
+        throw new Error('Puntos insuficientes para completar este pedido');
+      }
+
+      await tx.loyaltyPoint.create({
+        data: {
+          userId: data.userId,
+          points: -totalRewardPoints,
+          reason: 'REDEMPTION',
+          orderId: order.id,
+        },
+      });
+
+      for (const rewardItem of data.rewardItems) {
+        const reward = await tx.pointReward.findUnique({
+          where: { id: rewardItem.rewardId },
+          include: { product: true },
+        });
+        if (reward?.product && !reward.product.unlimitedStock) {
+          await tx.product.update({
+            where: { id: reward.product.id },
+            data: { stock: { decrement: 1 } },
+          });
+        }
+      }
+    }
+
+    if (order.user?.email) {
+      sendOrderConfirmation(order.user.email, order).catch(() => {});
+    }
+    sendAdminOrderNotification(order).catch(() => {});
+
+    return order;
+  });
 };
 
 export const getUserOrdersService = async (userId: string) => {

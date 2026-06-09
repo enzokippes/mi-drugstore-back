@@ -56,6 +56,48 @@ export const getRewardByIdService = async (id: string) => {
   });
 };
 
+export const validateRewardForCartService = async (userId: string, rewardId: string) => {
+  const reward = await prisma.pointReward.findUnique({
+    where: { id: rewardId },
+    include: {
+      product: {
+        select: {
+          id: true,
+          name: true,
+          image: true,
+          stock: true,
+          unlimitedStock: true,
+          price: true,
+        },
+      },
+    },
+  });
+
+  if (!reward || !reward.active) {
+    throw new Error('Recompensa no disponible');
+  }
+
+  if (!reward.productId || !reward.product) {
+    throw new Error('Esta recompensa no tiene producto asociado');
+  }
+
+  const points = await prisma.loyaltyPoint.findMany({
+    where: { userId },
+    select: { points: true },
+  });
+  const totalPoints = points.reduce((sum, p) => sum + p.points, 0);
+
+  if (totalPoints < reward.pointsCost) {
+    throw new Error('Puntos insuficientes');
+  }
+
+  if (reward.product.stock < 1 && !reward.product.unlimitedStock) {
+    throw new Error('Producto sin stock');
+  }
+
+  return { reward, product: reward.product, pointsCost: reward.pointsCost };
+};
+
 export const redeemPointsService = async (userId: string, rewardId: string) => {
   return await prisma.$transaction(async (tx) => {
     const reward = await tx.pointReward.findUnique({
