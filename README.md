@@ -36,12 +36,13 @@ src/
 │   ├── product.controller.ts     # Product CRUD
 │   ├── promotion.controller.ts   # Promotion CRUD
 │   ├── settings.controller.ts    # Global configuration
+│   ├── popular.controller.ts     # Featured/popular products
 │   └── stats.controller.ts       # Admin dashboard statistics
-├── middleware/
+├── middlewares/
 │   ├── adminMiddleware.ts     # ADMIN role guard
 │   ├── authMiddleware.ts       # JWT verification
 │   ├── validate.ts             # Zod validation middleware
-│   └── upload.ts               # Multer configuration (legacy - use Cloudinary)
+│   └── upload.ts               # Multer + Cloudinary image upload
 ├── routes/
 │   ├── address.routes.ts       # /api/addresses
 │   ├── auth.routes.ts           # /api/auth
@@ -152,6 +153,7 @@ Set these in your Render dashboard:
 | `JWT_SECRET` | A long random string |
 | `PORT` | 3000 |
 | `FRONTEND_URL` | Your frontend URL (e.g., `https://barbanegra.onrender.com`) |
+| `ALLOWED_ORIGINS` | Comma-separated allowed CORS origins (optional, defaults to localhost) |
 | `RESEND_API_KEY` | Your Resend API key |
 | `ADMIN_EMAIL` | Your admin email |
 | `CLOUDINARY_URL` | Your Cloudinary URL |
@@ -179,6 +181,8 @@ Set these in your Render dashboard:
 |--------|----------|-------------|------|------|
 | GET | `/` | List all products | No | - |
 | GET | `/popular` | List popular products | No | - |
+| GET | `/featured` | List featured products | No | - |
+| GET | `/suggestions` | Get product suggestions | Yes | ADMIN |
 | GET | `/:id` | Get product details | No | - |
 | POST | `/` | Create product | Yes | ADMIN |
 | PUT | `/:id` | Update product | Yes | ADMIN |
@@ -238,6 +242,7 @@ Set these in your Render dashboard:
 | GET | `/rewards` | List active rewards | No | - |
 | GET | `/my-points` | Get user's points balance | Yes | USER+ |
 | GET | `/history` | Get user's points history | Yes | USER+ |
+| POST | `/validate-reward` | Validate reward before cart add | Yes | USER+ |
 | POST | `/redeem` | Redeem points for reward | Yes | USER+ |
 | POST | `/award` | Award points to user | Yes | ADMIN |
 | GET | `/admin/rewards` | List all rewards | Yes | ADMIN |
