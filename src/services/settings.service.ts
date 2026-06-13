@@ -20,3 +20,15 @@ export const getAllSettings = async (): Promise<Record<string, string>> => {
     return acc;
   }, {} as Record<string, string>);
 };
+
+const PUBLIC_SETTINGS_KEYS = ['trackInventory', 'storeHours', 'deliveryHours'];
+
+export const getPublicSettings = async (): Promise<Record<string, string>> => {
+  const settings = await prisma.setting.findMany({
+    where: { key: { in: PUBLIC_SETTINGS_KEYS } },
+  });
+  return settings.reduce((acc, s) => {
+    acc[s.key] = s.value;
+    return acc;
+  }, {} as Record<string, string>);
+};

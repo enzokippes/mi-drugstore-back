@@ -11,6 +11,15 @@ export const getSettings = async (_req: Request, res: Response) => {
   }
 };
 
+export const getPublicSettings = async (_req: Request, res: Response) => {
+  try {
+    const settings = await settingsService.getPublicSettings();
+    sendSuccess(res, settings);
+  } catch (error: any) {
+    sendError(res, error.message || 'Error fetching settings', 500);
+  }
+};
+
 export const updateSetting = async (req: Request, res: Response) => {
   try {
     const { key, value } = req.body;

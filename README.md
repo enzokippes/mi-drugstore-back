@@ -223,6 +223,7 @@ Set these in your Render dashboard:
 | Method | Endpoint | Description | Auth | Role |
 |--------|----------|-------------|------|------|
 | GET | `/` | Get all settings | Yes | ADMIN |
+| GET | `/public` | Get public settings (trackInventory, storeHours, deliveryHours) | No | - |
 | PUT | `/` | Update settings | Yes | ADMIN |
 
 ### Delivery Zones — `/api/delivery-zones`

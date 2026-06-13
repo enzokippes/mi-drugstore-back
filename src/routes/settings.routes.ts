@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getSettings, updateSetting } from '../controllers/settings.controller';
+import { getSettings, updateSetting, getPublicSettings } from '../controllers/settings.controller';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import { adminMiddleware } from '../middlewares/adminMiddleware';
 import { settingSchema } from '../validations/settings.validation';
@@ -20,6 +20,18 @@ const router = Router();
  *         description: Settings object
  */
 router.get('/', authMiddleware, adminMiddleware, getSettings);
+
+/**
+ * @swagger
+ * /api/settings/public:
+ *   get:
+ *     summary: Get public settings (trackInventory, storeHours, deliveryHours)
+ *     tags: [Settings]
+ *     responses:
+ *       200:
+ *         description: Public settings object
+ */
+router.get('/public', getPublicSettings);
 
 /**
  * @swagger
