@@ -7,17 +7,19 @@ datasource db {
 }
 
 model User {
-  id            String         @id @default(uuid())
-  email         String         @unique
-  password      String
-  name          String
-  phone         String?
-  role          String         @default("USER")
-  resetToken    String?
+  id               String         @id @default(uuid())
+  email            String         @unique
+  password         String
+  name             String
+  phone            String?
+  role             String         @default("USER")
+  banned           Boolean        @default(false)
+  resetToken       String?
   resetTokenExpiry DateTime?
-  orders        Order[]
-  loyaltyPoints LoyaltyPoint[]
-  addresses     Address[]
+  createdAt        DateTime       @default(now())
+  orders           Order[]
+  loyaltyPoints    LoyaltyPoint[]
+  addresses        Address[]
 }
 
 model Category {
@@ -27,6 +29,7 @@ model Category {
   parent     Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
   children   Category[] @relation("CategoryHierarchy")
   products   Product[]
+  createdAt  DateTime   @default(now())
 }
 
 model Product {
@@ -43,6 +46,7 @@ model Product {
   category       Category     @relation(fields: [categoryId], references: [id])
   orderItems     OrderItem[]
   pointRewards   PointReward[]
+  createdAt      DateTime     @default(now())
 }
 
 model Order {
@@ -72,11 +76,13 @@ model OrderItem {
   productId   String?
   order       Order      @relation(fields: [orderId], references: [id])
   product     Product?   @relation(fields: [productId], references: [id])
+  createdAt   DateTime   @default(now())
 }
 
 model Setting {
-  key   String @id
-  value String
+  key       String   @id
+  value     String
+  createdAt DateTime @default(now())
 }
 
 model Promotion {
@@ -101,6 +107,7 @@ model DeliveryZone {
   active        Boolean   @default(true)
   orders        Order[]
   addresses     Address[]
+  createdAt     DateTime  @default(now())
 }
 
 model LoyaltyPoint {
@@ -122,17 +129,19 @@ model PointReward {
   product     Product? @relation(fields: [productId], references: [id])
   image       String?
   active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
 }
 
 model Address {
-  id        String  @id @default(uuid())
+  id        String         @id @default(uuid())
   userId    String
-  user      User    @relation(fields: [userId], references: [id])
+  user      User           @relation(fields: [userId], references: [id])
   label     String
   street    String
   number    String
   notes     String?
   zoneId    String?
-  zone      DeliveryZone? @relation(fields: [zoneId], references: [id])
-  isDefault Boolean @default(false)
+  zone      DeliveryZone?  @relation(fields: [zoneId], references: [id])
+  isDefault Boolean        @default(false)
+  createdAt DateTime       @default(now())
 }

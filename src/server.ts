@@ -20,6 +20,7 @@ import loyaltyRoutes from './routes/loyalty.routes';
 import popularRoutes from './routes/popular.routes';
 import addressRoutes from './routes/address.routes';
 import statsRoutes from './routes/stats.routes';
+import userRoutes from './routes/user.routes';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -100,6 +101,7 @@ app.use('/api/delivery-zones', deliveryZoneRoutes);
 app.use('/api/loyalty', loyaltyRoutes);
 app.use('/api/addresses', addressRoutes);
 app.use('/api/admin/stats', statsRoutes);
+app.use('/api/admin/users', userRoutes);
 
 // Health check
 app.get('/health', (_req: Request, res: Response) => {

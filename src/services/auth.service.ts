@@ -35,6 +35,10 @@ export const loginService = async (email: string, passwordStr: string) => {
     throw new Error('Invalid credentials');
   }
 
+  if (user.banned) {
+    throw new Error('Cuenta baneada. Contacta al administrador.');
+  }
+
   const isMatch = await bcrypt.compare(passwordStr, user.password);
   if (!isMatch) {
     throw new Error('Invalid credentials');
